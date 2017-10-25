@@ -50,16 +50,12 @@ void setup () {
 
   const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
   char fileName[13] = FILE_BASE_NAME "00.csv";
-  
-  #ifndef ESP8266
-    while (!Serial); // for Leonardo/Micro/Zero
-  #endif
 
   Serial.begin(9600);
-  // Wait for USB Serial 
-  while (!Serial) {
+  /*// Wait for USB Serial 
+  while (!Serial && millis() < 4000) {
     SysCall::yield();
-  }
+  }*/
   dht.begin();
 
   delay(1000); // wait for console opening
@@ -68,7 +64,6 @@ void setup () {
     Serial.println("Couldn't find RTC");
     while (1);
   }
-
   rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   /* DS1307 doesn't have the lost power option. TODO: enable time setting,
   if (rtc.lostPower()) {
@@ -248,12 +243,15 @@ void loop () {
      
 
     /**
-     * We want to measure humidity every 6 hours so that we have 4 measurements per day.
-     * Considering humidity is not going to change so radically this is just fine.
-     * Measurement hours: 1am, 7am, 13h, 20h
+     * Humidity measurement - later we're going to split off measuring soil moisture and other measurements 
+     * beacause some are more critical than others (and should be measured more often).
+     * 
+     * We want to measure moisture every 6 hours so that we have 4 measurements per day.
+     * Considering moisture is not going to change so radically this is just fine.
+     * Measurement hours: 1am, 7am, 13h, 19h
      */
 
-    if(now.second() % 10 == 0 && (now.hour() % 1 == 0) && now.minute() % 1 == 0){
+    if(now.second() == 0 && ((now.hour() - 1) % 6 == 0) && now.minute() == 0){
       if(!written){
             
         measure();
