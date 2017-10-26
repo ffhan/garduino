@@ -50,9 +50,6 @@ measures *measurements = (measures*) malloc(sizeof(measures));
 
 void setup () {
 
-  const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
-  char fileName[13] = FILE_BASE_NAME "00.csv";
-
   Serial.begin(9600);
   /*// Wait for USB Serial 
   while (!Serial && millis() < 4000) {
@@ -77,6 +74,31 @@ void setup () {
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
   }*/
   
+  
+  /* DO THIS IF YOU WANT TO WRITE TO A DIFFERENT FILE EVERY TIME YOU UPLOAD NEW CODE.
+  while (sd.exists(fileName)) {
+    if (fileName[BASE_NAME_SIZE + 1] != '9') {
+      fileName[BASE_NAME_SIZE + 1]++;
+    } else if (fileName[BASE_NAME_SIZE] != '9') {
+      fileName[BASE_NAME_SIZE + 1] = '0';
+      fileName[BASE_NAME_SIZE]++;
+    } else {
+      error("Can't create file name");
+    }
+  }*/
+
+  initSD();
+  
+  pinMode(lightControlPin, OUTPUT); // Control light control pin as output
+  pinMode(SensorPowerPin, OUTPUT); // Control humidity sensor power as output
+  pinMode(humiditySensorReadPin, INPUT); // Get data from humidity sensor
+  
+}
+
+void initSD(){
+  const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
+  char fileName[13] = FILE_BASE_NAME "00.csv";
+
   // Find an unused file name.
   if (BASE_NAME_SIZE > 6) {
     error("FILE_BASE_NAME too long");
@@ -97,22 +119,6 @@ void setup () {
   Serial.println(fileName);
   printHeader();
   isInitialised = true;
-  /* DO THIS IF YOU WANT TO WRITE TO A DIFFERENT FILE EVERY TIME YOU UPLOAD NEW CODE.
-  while (sd.exists(fileName)) {
-    if (fileName[BASE_NAME_SIZE + 1] != '9') {
-      fileName[BASE_NAME_SIZE + 1]++;
-    } else if (fileName[BASE_NAME_SIZE] != '9') {
-      fileName[BASE_NAME_SIZE + 1] = '0';
-      fileName[BASE_NAME_SIZE]++;
-    } else {
-      error("Can't create file name");
-    }
-  }*/
-  
-  pinMode(lightControlPin, OUTPUT); // Control light control pin as output
-  pinMode(SensorPowerPin, OUTPUT); // Control humidity sensor power as output
-  pinMode(humiditySensorReadPin, INPUT); // Get data from humidity sensor
-  
 }
 
 void writeHeader(){
@@ -224,28 +230,7 @@ void loop () {
         break;
         case 21:
         if(!isInitialised){
-          const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
-          char fileName[13] = FILE_BASE_NAME "00.csv";
-          if (!sd.begin(chipSelect, SD_SCK_MHZ(50))) {
-            sd.initErrorHalt();
-          }
-          if (!file.open(fileName, O_CREAT | O_WRITE | O_EXCL)) {
-            if(!file.open(fileName, O_WRITE | O_AT_END)){
-              Serial.println(fileName);
-              
-              error("file.open");
-            }
-            else Serial.println("File already existing, opened successfully.");
-          } 
-          else{
-            Serial.println("File didn't exist. Writing a header to it.");
-            writeHeader(); // if file doesn't exist write a header to it.
-          }
-          Serial.print(F("Logging to: "));
-          Serial.println(fileName);
-          printHeader();
-          logging = true;
-          isInitialised = true;
+          initSD();
           Serial.println("Custom mode: logging on. \t Reminder: Did you insert SD card?");
         }
         break;
