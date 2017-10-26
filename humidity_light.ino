@@ -36,6 +36,8 @@ int soilValue = 0;
 bool lightCondition = true;
 int lightAdmin = 0; // 0 - turn admin privilege off, 1 - turn admin privilege on -> light off, 2 - turn admin privilege on -> light on
 bool written = false;
+bool logging = true;
+bool isInitialised = false;
 
 typedef struct{
   int soilMoisture;
@@ -64,8 +66,8 @@ void setup () {
     Serial.println("Couldn't find RTC");
     while (1);
   }
-  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  /* DS1307 doesn't have the lost power option. TODO: enable time setting,
+  /*rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  DS1307 doesn't have the lost power option. TODO: enable time setting,
   if (rtc.lostPower()) {
     Serial.println("RTC lost power, lets set the time!");
     // following line sets the RTC to the date & time this sketch was compiled
@@ -74,14 +76,27 @@ void setup () {
     // January 21, 2014 at 3am you would call:
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
   }*/
-
-  if (!sd.begin(chipSelect, SD_SCK_MHZ(50))) {
-    sd.initErrorHalt();
-  }
+  
   // Find an unused file name.
   if (BASE_NAME_SIZE > 6) {
     error("FILE_BASE_NAME too long");
   }
+
+  if (!sd.begin(chipSelect, SD_SCK_MHZ(50))) {
+    sd.initErrorHalt();
+  }
+  if (!file.open(fileName, O_CREAT | O_WRITE | O_EXCL)) {
+    if(!file.open(fileName, O_WRITE | O_AT_END)) error("file.open");
+    else Serial.println("File already existing, opened successfully.");
+  } 
+  else{
+    Serial.println("File didn't exist. Writing a header to it.");
+    writeHeader(); // if file doesn't exist write a header to it.
+  }
+  Serial.print(F("Logging to: "));
+  Serial.println(fileName);
+  printHeader();
+  isInitialised = true;
   /* DO THIS IF YOU WANT TO WRITE TO A DIFFERENT FILE EVERY TIME YOU UPLOAD NEW CODE.
   while (sd.exists(fileName)) {
     if (fileName[BASE_NAME_SIZE + 1] != '9') {
@@ -93,18 +108,6 @@ void setup () {
       error("Can't create file name");
     }
   }*/
-  if (!file.open(fileName, O_CREAT | O_WRITE | O_EXCL)) {
-    if(!file.open(fileName, O_WRITE | O_AT_END)) error("file.open");
-    else Serial.println("File already existing, opened successfully.");
-  } 
-  else{
-    Serial.println("File didn't exist. Writing a header to it.");
-    writeHeader(); // if file doesn't exist write a header to it.
-  }
-
-  Serial.print(F("Logging to: "));
-  Serial.println(fileName);
-  printHeader();
   
   pinMode(lightControlPin, OUTPUT); // Control light control pin as output
   pinMode(SensorPowerPin, OUTPUT); // Control humidity sensor power as output
@@ -159,6 +162,11 @@ void logData(measures* track, DateTime now){
   Serial.println(lightCondition ? "On" : "Off");*/
   Serial.println(line);
   file.println(line);
+
+  // Force data to SD and update the directory entry to avoid data loss.
+  if (!file.sync() || file.getWriteError()) {
+    error("write error");
+  }
 }
 
 void printHeader(){
@@ -214,13 +222,53 @@ void loop () {
         Serial.println(F("Done"));
         SysCall::halt();
         break;
-        case 2:
+        case 21:
+        if(!isInitialised){
+          const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
+          char fileName[13] = FILE_BASE_NAME "00.csv";
+          if (!sd.begin(chipSelect, SD_SCK_MHZ(50))) {
+            sd.initErrorHalt();
+          }
+          if (!file.open(fileName, O_CREAT | O_WRITE | O_EXCL)) {
+            if(!file.open(fileName, O_WRITE | O_AT_END)){
+              Serial.println(fileName);
+              
+              error("file.open");
+            }
+            else Serial.println("File already existing, opened successfully.");
+          } 
+          else{
+            Serial.println("File didn't exist. Writing a header to it.");
+            writeHeader(); // if file doesn't exist write a header to it.
+          }
+          Serial.print(F("Logging to: "));
+          Serial.println(fileName);
+          printHeader();
+          logging = true;
+          isInitialised = true;
+          Serial.println("Custom mode: logging on. \t Reminder: Did you insert SD card?");
+        }
+        break;
+        case 20: // 2 is switch for logging. 20 disables, 21 enables.
+        logging = false;
+        if(isInitialised){
+          file.close();
+          Serial.println("Custom mode: logging off. You can safely remove SD card.");
+          isInitialised = false;
+        }
+        break;
+        case 11: // switch for lighting
+        Serial.println("Custom mode: light on.");
         lightCondition = true;
         digitalWrite(lightControlPin, LOW);
         break;
-        case 1:
+        case 10:
+        Serial.println("Custom mode: light off.");
         lightCondition = false;
         digitalWrite(lightControlPin, HIGH);
+        break;
+        case 0:
+        Serial.println("Normal mode on.");
         break;
       }
     }
@@ -251,17 +299,12 @@ void loop () {
      * Measurement hours: 1am, 7am, 13h, 19h
      */
 
-    if(now.second() == 0 && ((now.hour() - 1) % 6 == 0) && now.minute() == 0){
+    if(now.second() == 0 && (now.hour() % 1 == 0) && now.minute() == 0){
       if(!written){
             
         measure();
-        
-        logData(measurements, now);
 
-        // Force data to SD and update the directory entry to avoid data loss.
-        if (!file.sync() || file.getWriteError()) {
-          error("write error");
-        }
+        if(logging) logData(measurements, now);
 
         written = true;
       }
