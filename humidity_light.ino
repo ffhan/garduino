@@ -21,7 +21,6 @@ DHT dht(DHTPIN, DHTTYPE);
 
 char fileName[13];
 
-char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 const String header = "DateTime stamp;Soil moisture;Soil description;Air humidity;Air temperature;Light On/Off";
 const int lightControlPin = 6;
 const int SensorPowerPin = 2;
@@ -46,8 +45,6 @@ typedef struct{
   float humidity;
 } measures;
 
-measures *measurements = (measures*) malloc(sizeof(measures));
-
 void setup () {
 
   Serial.begin(9600);
@@ -63,7 +60,7 @@ void setup () {
     Serial.println("Couldn't find RTC");
     while (1);
   }
-  /*rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  /*rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));/*
   DS1307 doesn't have the lost power option. TODO: enable time setting,
   if (rtc.lostPower()) {
     Serial.println("RTC lost power, lets set the time!");
@@ -72,19 +69,6 @@ void setup () {
     // This line sets the RTC with an explicit date & time, for example to set
     // January 21, 2014 at 3am you would call:
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
-  }*/
-  
-  
-  /* DO THIS IF YOU WANT TO WRITE TO A DIFFERENT FILE EVERY TIME YOU UPLOAD NEW CODE.
-  while (sd.exists(fileName)) {
-    if (fileName[BASE_NAME_SIZE + 1] != '9') {
-      fileName[BASE_NAME_SIZE + 1]++;
-    } else if (fileName[BASE_NAME_SIZE] != '9') {
-      fileName[BASE_NAME_SIZE + 1] = '0';
-      fileName[BASE_NAME_SIZE]++;
-    } else {
-      error("Can't create file name");
-    }
   }*/
 
   initSD();
@@ -125,49 +109,64 @@ void writeHeader(){
   file.println(header);
   printHeader();
 }
-void logData(measures* track, DateTime now){
-  String line = "";
-  String yr = String(now.year(), DEC);
-  String mnth = String(now.month(), DEC);
-  String dy = String(now.day(), DEC);
-  String hr = String(now.hour(), DEC);
-  String mnt = String(now.minute(), DEC);
-  String sc = String(now.second(), DEC);
-  String moisture = String(track->soilMoisture, DEC);
-  String condition = soilCondition(track->soilMoisture);
-  String humidity = String(track->humidity, DEC);
-  String tmp = String(track->temperature, DEC);
+void logData(DateTime now){
+  measures track;
+  measure(&track);
   String lightCond = (lightCondition ? "On" : "Off");
-  
-  line += yr + '/' + mnth + '/' + dy + ' ';
-  line += hr + ':' + mnt + ':' + sc + ';';
-  line += moisture + ';' + condition + ';' + humidity + ';';
-  line += tmp + ';';
-  line += lightCond;
   /*
-  Serial.print(now.year(), DEC);
-  Serial.print('/');
-  Serial.print(now.month(), DEC);
-  Serial.print('/');
-  Serial.print(now.day(), DEC);
+  line += yr + "/" + mnth + "/" + dy + " ";
+  line += hr + ":" + mnt + ":" + sc + ";";
+  line += moisture + ";" + condition + ";" + humidity + ";";
+  line += tmp + ";";
+  line += lightCond;
+  stamp;Soil moisture;Soil description;Air humidity;Air temperature;Light On/Off
+  */
+  
+  
+  //sprintf(line, "%d/%d/%d %d:%d:%d;%d;%s;%f;%f;%s", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second(), track.soilMoisture, soilCondition(track.soilMoisture), track.humidity, track.temperature, lightCond);
+  Serial.print(now.year());
+  Serial.print("/");
+  Serial.print(now.month());
+  Serial.print("/");
+  Serial.print(now.day());
+  Serial.print(" ");
+  Serial.print(now.hour());
+  Serial.print(":");
+  Serial.print(now.minute());
+  Serial.print(":");
+  Serial.print(now.second());
   Serial.print(";");
-  Serial.print(now.hour(), DEC);
-  Serial.print(':');
-  Serial.print(now.minute(), DEC);
-  Serial.print(':');
-  Serial.print(now.second(), DEC);
+  Serial.print(track.soilMoisture);
   Serial.print(";");
-  Serial.print(measurements->soilMoisture);
+  Serial.print(soilCondition(track.soilMoisture));
   Serial.print(";");
-  Serial.print(soilDescription);
+  Serial.print(track.humidity);
   Serial.print(";");
-  Serial.print(measurements->humidity);
-  Serial.print("%;");
-  Serial.print(measurements->temperature);
-  Serial.print("°C;");
-  Serial.println(lightCondition ? "On" : "Off");*/
-  Serial.println(line);
-  file.println(line);
+  Serial.print(track.temperature);
+  Serial.print(";");
+  Serial.println(lightCond);
+
+  file.print(now.year());
+  file.print("/");
+  file.print(now.month());
+  file.print("/");
+  file.print(now.day());
+  file.print(" ");
+  file.print(now.hour());
+  file.print(":");
+  file.print(now.minute());
+  file.print(":");
+  file.print(now.second());
+  file.print(";");
+  file.print(track.soilMoisture);
+  file.print(";");
+  file.print(soilCondition(track.soilMoisture));
+  file.print(";");
+  file.print(track.humidity);
+  file.print(";");
+  file.print(track.temperature);
+  file.print(";");
+  file.println(lightCond);
 
   // Force data to SD and update the directory entry to avoid data loss.
   if (!file.sync() || file.getWriteError()) {
@@ -179,7 +178,7 @@ void printHeader(){
   Serial.println(header);
 }
 
-void measure(){
+void measure(measures* measurements){
   // Powers up sensors and reads the data.
 
   digitalWrite(SensorPowerPin, HIGH);
@@ -191,7 +190,6 @@ void measure(){
   measurements->humidity = dht.readHumidity();
   measurements->temperature = dht.readTemperature();
 
-  delay(1000);
   digitalWrite(SensorPowerPin, LOW); // Turn the sensor power off.
 
 }
@@ -215,6 +213,33 @@ String soilCondition(int soilValue){
   return string;
 }
 
+int getFreeRam()
+{
+  extern int __heap_start, *__brkval; 
+  int v;
+
+  v = (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+
+  Serial.print("Free RAM = ");
+  Serial.println(v, DEC);
+
+  return v;
+}
+
+void printTime(DateTime now){
+  String line = "";
+  String yr = String(now.year(), DEC);
+  String mnth = String(now.month(), DEC);
+  String dy = String(now.day(), DEC);
+  String hr = String(now.hour(), DEC);
+  String mnt = String(now.minute(), DEC);
+  String lst = String(now.second(), DEC);
+  
+  line += yr + '/' + mnth + '/' + dy + ' ';
+  line += hr + ':' + mnt + ':' + lst + ';';
+  Serial.println(line);
+}
+
 void loop () {
 
     DateTime now = rtc.now(); // read time.
@@ -223,31 +248,46 @@ void loop () {
     {
       lightAdmin = Serial.parseInt();
       switch(lightAdmin){
-        case 12345: // like SWI 12345
+        case 12345:{ // like SWI 12345
         file.close();
         Serial.println(F("Done"));
         SysCall::halt();
         break;
-        case 21:
+        }
+        case 31:{
+          Serial.println("Updating time..");
+          rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+          printTime(now);
+          break;
+        }
+        case 30:{ // check time
+        printTime(now);
+        break;
+        }
+        case 21:{
         if(!isInitialised){
           initSD();
+          logging = true;
           Serial.println("Custom mode: logging on. \t Reminder: Did you insert SD card?");
         }
         break;
-        case 20: // 2 is switch for logging. 20 disables, 21 enables.
-        logging = false;
+        }
+        case 20:{ // 2 is switch for logging. 20 disables, 21 enables.
         if(isInitialised){
+          logging = false;
           file.close();
           Serial.println("Custom mode: logging off. You can safely remove SD card.");
           isInitialised = false;
         }
         break;
-        case 11: // switch for lighting
+        }
+        case 11:{ // switch for lighting
         Serial.println("Custom mode: light on.");
         lightCondition = true;
         digitalWrite(lightControlPin, LOW);
         break;
-        case 10:
+        }
+        case 10:{
         Serial.println("Custom mode: light off.");
         lightCondition = false;
         digitalWrite(lightControlPin, HIGH);
@@ -255,6 +295,7 @@ void loop () {
         case 0:
         Serial.println("Normal mode on.");
         break;
+        }
       }
     }
 
@@ -263,7 +304,7 @@ void loop () {
      * That means 8am - 10pm.
      */
 
-     if(lightAdmin == 0){
+     if(lightAdmin != 10 || lightAdmin != 11){
       // if time is inside interval <8am,10pm> and light is not on (user has not turned it on) then:
       if(getDecimalTime(now) >= 8.0 && getDecimalTime(now) < 22.0){ //TODO: not constantly turning on
         digitalWrite(lightControlPin, LOW); // it's NC (normally closed), so LOW turns the light on.
@@ -286,10 +327,9 @@ void loop () {
 
     if(now.second() == 0 && (now.hour() % 1 == 0) && now.minute() == 0){
       if(!written){
-            
-        measure();
 
-        if(logging) logData(measurements, now);
+        if(logging) logData(now);
+        else Serial.println("Didn't write, that's what you wanted, right?");
 
         written = true;
       }
@@ -297,3 +337,5 @@ void loop () {
       written = false;
     }
 }
+
+
