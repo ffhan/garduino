@@ -8,6 +8,8 @@
 #define DHTPIN 7 // dht22 pin
 #define DHTTYPE DHT22
 
+#define HEATPIN 5
+
 #define FILE_BASE_NAME "logger" //log file base name.
 #define error(msg) sd.errorHalt(F(msg)) // error messages stored in flash.
 
@@ -76,6 +78,7 @@ void setup () {
   pinMode(lightControlPin, OUTPUT); // Control light control pin as output
   pinMode(SensorPowerPin, OUTPUT); // Control humidity sensor power as output
   pinMode(humiditySensorReadPin, INPUT); // Get data from humidity sensor
+  pinMode(HEATPIN, OUTPUT);
   
 }
 
@@ -197,6 +200,8 @@ void measure(measures* measurements){
 double getDecimalTime(DateTime now){
   return (double)now.hour() + ((double)now.minute())/((double)60.0) + ((double)now.second())/((double)3600.0);
 }
+
+//439.33 is the boundary between wet and dry.
 String soilCondition(int soilValue){
   // Returns a descriptive string of the humidity of the soil
   String string;
@@ -211,6 +216,20 @@ String soilCondition(int soilValue){
   }else string = "Out of range";
 
   return string;
+}
+
+void heatSwitch(int state){
+  switch(state){
+    case 0:
+    {
+      digitalWrite(HEATPIN, LOW);
+      break;
+    }
+    case 1:{
+      digitalWrite(HEATPIN, HIGH);
+      break;
+    }
+  }
 }
 
 int getFreeRam()
@@ -253,6 +272,14 @@ void loop () {
         Serial.println(F("Done"));
         SysCall::halt();
         break;
+        }
+        case 41:{
+          heatSwitch(1);
+          break;
+        }
+        case 40:{ // heat controller
+          heatSwitch(0);
+          break;
         }
         case 31:{
           Serial.println("Updating time..");
@@ -297,6 +324,7 @@ void loop () {
         break;
         }
       }
+      if(lightAdmin != 10 || lightAdmin != 11) lightAdmin = 0;
     }
 
     /*
