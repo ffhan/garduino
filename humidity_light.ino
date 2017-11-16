@@ -18,7 +18,13 @@ const uint8_t chipSelect = 4;
 SdFat sd; // File system object.
 SdFile file; // Log file.
 
-RTC_DS3231 rtc;
+
+/*
+ * Because of the unfortunate decision to buy a data logging shield, I cannot use a DS3231 RTC on this project (currently).
+ * The shield already uses I2C connections SCL and SDA and because it occupies the same addresses as DS3231 module, I cannot multiplex them.
+ * The obvious solution is to buy a standalone SD card module without the RTC.
+ */
+RTC_DS1307 rtc;
 DHT dht(DHTPIN, DHTTYPE);
 
 char fileName[13];
@@ -50,6 +56,8 @@ typedef struct{
 void setup () {
 
   Serial.begin(9600);
+
+  initSD();
   /*// Wait for USB Serial 
   while (!Serial && millis() < 4000) {
     SysCall::yield();
@@ -76,8 +84,6 @@ void setup () {
     // January 21, 2014 at 3am you would call:
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
   }*/
-
-  initSD();
   
   pinMode(lightControlPin, OUTPUT); // Control light control pin as output
   pinMode(SensorPowerPin, OUTPUT); // Control humidity sensor power as output
@@ -357,8 +363,8 @@ void loop () {
      * Considering moisture is not going to change so radically this is just fine.
      * Measurement hours: 1am, 7am, 13h, 19h
      */
-
-    if(now.second() == 0 && (now.hour() % 1 == 0) && now.minute() % 1 == 0){
+     
+    if(now.second() == 0 && (now.hour() % 1 == 0) && now.minute() == 0){
       if(!written){
 
         if(logging) logData(now);
