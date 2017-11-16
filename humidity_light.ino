@@ -8,7 +8,7 @@
 #define DHTPIN 7 // dht22 pin
 #define DHTTYPE DHT22
 
-#define HEATPIN 5
+#define HEATPIN 8
 
 #define FILE_BASE_NAME "logger" //log file base name.
 #define error(msg) sd.errorHalt(F(msg)) // error messages stored in flash.
@@ -18,7 +18,7 @@ const uint8_t chipSelect = 4;
 SdFat sd; // File system object.
 SdFile file; // Log file.
 
-RTC_DS1307 rtc;
+RTC_DS3231 rtc;
 DHT dht(DHTPIN, DHTTYPE);
 
 char fileName[13];
@@ -62,8 +62,12 @@ void setup () {
     Serial.println("Couldn't find RTC");
     while (1);
   }
-  /*rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));/*
-  DS1307 doesn't have the lost power option. TODO: enable time setting,
+  /*
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  DateTime nowtime = rtc.now();
+  DateTime future(nowtime.unixtime() + 12);
+  rtc.adjust(future);*/
+  /*DS1307 doesn't have the lost power option. TODO: enable time setting,
   if (rtc.lostPower()) {
     Serial.println("RTC lost power, lets set the time!");
     // following line sets the RTC to the date & time this sketch was compiled
@@ -319,7 +323,8 @@ void loop () {
         lightCondition = false;
         digitalWrite(lightControlPin, HIGH);
         break;
-        case 0:
+        }
+        case 0:{
         Serial.println("Normal mode on.");
         break;
         }
@@ -353,7 +358,7 @@ void loop () {
      * Measurement hours: 1am, 7am, 13h, 19h
      */
 
-    if(now.second() == 0 && (now.hour() % 1 == 0) && now.minute() == 0){
+    if(now.second() == 0 && (now.hour() % 1 == 0) && now.minute() % 1 == 0){
       if(!written){
 
         if(logging) logData(now);
