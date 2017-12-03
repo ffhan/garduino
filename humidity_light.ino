@@ -215,13 +215,13 @@ double getDecimalTime(DateTime now){
 String soilCondition(int soilValue){
   // Returns a descriptive string of the humidity of the soil
   String string;
-  if(soilValue > water && soilValue < (water + interval)){
+  if(soilValue >= water && soilValue < (water + interval)){
     string = "Very wet";
   } else
-  if(soilValue > (water + interval) && soilValue < (air - interval)){
+  if(soilValue >= (water + interval) && soilValue <= (air - interval)){
     string = "Wet";
   } else
-  if(soilValue < air && soilValue > (air - interval)){
+  if(soilValue <= air && soilValue > (air - interval)){
     string = "Dry";
   }else string = "Out of range";
 
@@ -282,6 +282,11 @@ void loop () {
         Serial.println(F("Done"));
         SysCall::halt();
         break;
+        }
+        case 5:{
+          if(logging) logData(now);
+          else Serial.println("Didn't write, that's what you wanted, right?");
+          break;
         }
         case 41:{
           heatSwitch(1);
@@ -364,7 +369,7 @@ void loop () {
      * Measurement hours: 1am, 7am, 13h, 19h
      */
      
-    if(now.second() == 0 && (now.hour() % 1 == 0) && now.minute() == 0){
+    if(now.second() == 0 && (now.hour() % 1 == 0) && now.minute() % 30 == 0){
       if(!written){
 
         if(logging) logData(now);
