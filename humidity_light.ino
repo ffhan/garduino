@@ -340,7 +340,7 @@ void loop () {
         break;
         }
       }
-      if(lightAdmin != 10 || lightAdmin != 11) lightAdmin = 0;
+      if(lightAdmin != 10 && lightAdmin != 11) lightAdmin = 0;
     }
 
     /*
@@ -348,7 +348,7 @@ void loop () {
      * That means 8am - 10pm.
      */
 
-     if(lightAdmin != 10 || lightAdmin != 11){
+     if(lightAdmin != 10 && lightAdmin != 11){
       // if time is inside interval <8am,10pm> and light is not on (user has not turned it on) then:
       if(getDecimalTime(now) >= 8.0 && getDecimalTime(now) < 22.0){ //TODO: not constantly turning on
         digitalWrite(lightControlPin, LOW); // it's NC (normally closed), so LOW turns the light on.
