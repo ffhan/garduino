@@ -4,11 +4,14 @@
 #include "DHT.h"
 #include <SPI.h>
 #include "SdFat.h"
+//#include <IRremote.h>
 
 #define DHTPIN 7 // dht22 pin
 #define DHTTYPE DHT22
 
 #define HEATPIN 8
+#define LOGGING_LED 5
+#define IR_PIN 3
 
 #define FILE_BASE_NAME "logger" //log file base name.
 #define error(msg) sd.errorHalt(F(msg)) // error messages stored in flash.
@@ -18,6 +21,10 @@ const uint8_t chipSelect = 4;
 SdFat sd; // File system object.
 SdFile file; // Log file.
 
+/*
+IRrecv irrecv(IR_PIN);
+decode_results results;
+*/
 
 /*
  * Because of the unfortunate decision to buy a data logging shield, I cannot use a DS3231 RTC on this project (currently).
@@ -41,6 +48,7 @@ int interval = (air - water) / 3;
 int soilValue = 0;
 
 bool lightCondition = true;
+int choice = 0;
 int lightAdmin = 0; // 0 - turn admin privilege off, 1 - turn admin privilege on -> light off, 2 - turn admin privilege on -> light on
 bool written = false;
 bool logging = true;
@@ -55,7 +63,7 @@ typedef struct{
 
 void setup () {
 
-  Serial.begin(9600);
+  Serial.begin(1200);
 
   initSD();
   /*// Wait for USB Serial 
@@ -63,6 +71,8 @@ void setup () {
     SysCall::yield();
   }*/
   dht.begin();
+
+  //irrecv.enableIRIn();
 
   delay(1000); // wait for console opening
 
@@ -89,6 +99,10 @@ void setup () {
   pinMode(SensorPowerPin, OUTPUT); // Control humidity sensor power as output
   pinMode(humiditySensorReadPin, INPUT); // Get data from humidity sensor
   pinMode(HEATPIN, OUTPUT);
+  //pinMode(IR_PIN, INPUT);
+  pinMode(LOGGING_LED, OUTPUT);
+
+  digitalWrite(LOGGING_LED, HIGH);
   
 }
 
@@ -242,41 +256,78 @@ void heatSwitch(int state){
   }
 }
 
-int getFreeRam()
-{
-  extern int __heap_start, *__brkval; 
-  int v;
-
-  v = (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
-
-  Serial.print("Free RAM = ");
-  Serial.println(v, DEC);
-
-  return v;
-}
-
-void printTime(DateTime now){
-  String line = "";
-  String yr = String(now.year(), DEC);
-  String mnth = String(now.month(), DEC);
-  String dy = String(now.day(), DEC);
-  String hr = String(now.hour(), DEC);
-  String mnt = String(now.minute(), DEC);
-  String lst = String(now.second(), DEC);
-  
-  line += yr + '/' + mnth + '/' + dy + ' ';
-  line += hr + ':' + mnt + ':' + lst + ';';
-  Serial.println(line);
-}
-
-void loop () {
-
-    DateTime now = rtc.now(); // read time.
-    
-    while(Serial.available())
+/*
+void readRemote(DateTime now){
+  if (irrecv.decode(&results))
     {
-      lightAdmin = Serial.parseInt();
-      switch(lightAdmin){
+     //Serial.println(results.value, HEX);
+     switch(results.value){
+      case 0xFF00FF:
+      Serial.println("POWER ON/OFF");
+      mainSwitch(21, now);
+      break;
+      case 0xFF10EF:
+      Serial.println("EJECT");
+      mainSwitch(20, now);
+      break;
+      case 0xFF9867:
+      Serial.println("OK");
+      mainSwitch(5, now);
+      break;
+      case 0xFFCA35:
+      Serial.println("UP");
+      break;
+      case 0xFF18E7:
+      Serial.println("DOWN");
+      break;
+      case 0xFFF20D:
+      Serial.println("LEFT");
+      break;
+      case 0xFFEA15:
+      Serial.println("RIGHT");
+      break;
+      case 0xFF807F:
+      Serial.println("1");
+      mainSwitch(11, now);
+      break;
+      case 0xFFA05F:
+      Serial.println("2");
+      break;
+      case 0xFF906F:
+      Serial.println("3");
+      break;
+      case 0xFF40BF:
+      Serial.println("4");
+      mainSwitch(10, now);
+      break;
+      case 0xFF609F:
+      Serial.println("5");
+      mainSwitch(30, now);
+      break;
+      case 0xFF50AF:
+      Serial.println("6");
+      break;
+      case 0xFFC03F:
+      Serial.println("7");
+      break;
+      case 0xFFE01F:
+      Serial.println("8");
+      break;
+      case 0xFFD02F:
+      Serial.println("9");
+      break;
+      case 0xFF22DD:
+      Serial.println("0");
+      mainSwitch(0, now);
+      break;
+     }
+     irrecv.resume(); // Receive the next value
+    }
+}
+*/
+
+void mainSwitch(int choice, DateTime now){
+  switch(choice){
         case 12345:{ // like SWI 12345
         file.close();
         Serial.println(F("Done"));
@@ -326,22 +377,54 @@ void loop () {
         case 11:{ // switch for lighting
         Serial.println("Custom mode: light on.");
         lightCondition = true;
+        lightAdmin = 11;
         digitalWrite(lightControlPin, LOW);
         break;
         }
         case 10:{
         Serial.println("Custom mode: light off.");
         lightCondition = false;
+        lightAdmin = 10;
         digitalWrite(lightControlPin, HIGH);
         break;
         }
         case 0:{
+        lightAdmin = 0;
         Serial.println("Normal mode on.");
         break;
         }
-      }
-      if(lightAdmin != 10 && lightAdmin != 11) lightAdmin = 0;
     }
+    if(lightAdmin != 10 && lightAdmin != 11) lightAdmin = 0;
+}
+
+void printTime(DateTime now){
+  String line = "";
+  String yr = String(now.year(), DEC);
+  String mnth = String(now.month(), DEC);
+  String dy = String(now.day(), DEC);
+  String hr = String(now.hour(), DEC);
+  String mnt = String(now.minute(), DEC);
+  String lst = String(now.second(), DEC);
+  
+  line += yr + '/' + mnth + '/' + dy + ' ';
+  line += hr + ':' + mnt + ':' + lst + ';';
+  Serial.println(line);
+}
+
+void loop () {
+
+    DateTime now = rtc.now(); // read time.
+    
+    while(Serial.available())
+    {
+      choice = Serial.parseInt();
+      mainSwitch(choice, now);
+    }
+
+    if(logging) digitalWrite(LOGGING_LED, HIGH);
+    else digitalWrite(LOGGING_LED, LOW);
+
+    //readRemote(now);
 
     /*
      * Ideally the plants should get 14-16 hours of light. We are going to go with 14 hours of light for testing.
@@ -358,7 +441,6 @@ void loop () {
         lightCondition = false;
       }
      }
-     
 
     /**
      * Humidity measurement - later we're going to split off measuring soil moisture and other measurements 
