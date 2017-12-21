@@ -1,27 +1,46 @@
-# garduino
+# Garduino
 
 ## Pins
-* `OUTPUT` Digital pin 2 - Sensor power pin
-* `OUTPUT` Digital pin 6 - Controls relay connected to lights
-* `INPUT` Digital pin 7 - Gets DHT22 sensor readings
-* `INPUT/OUTPUT` Digital pin 4 - Controller pin for data logging module
-* `INPUT` Analog pin A1 - Gets soil moisture sensor readings
+
+### Digital
+TYPE | pin # | System | Description | Note
+-----|-------|--------|-------------|------
+`OUTPUT` | pin 2 | Sensor | Sensor power pin
+`INPUT` | pin 3 | Remote | IR remote sensor pin
+`INPUT/OUTPUT` | pin 4 | Logging | Controller pin for data logging module
+`OUTPUT` | pin 5 | Logging | Logging LED control
+`OUTPUT` | pin 6 | Lighting | Controls relay connected to lights
+`INPUT` | pin 7 | Sensor | Gets DHT22 sensor readings
+`OUTPUT` | pin 8 | Heating | Controls a heating element | **NOT IN USE**
+`OUTPUT` | pin 9 | Watering | Controls a solenoid valve (watering system) | **NOT IN USE**
+`CONTROL` | pin 11 | Logging | SPI MOSI | Possibly taken
+`CONTROL` | pin 12 | Logging | SPI MISO | Possibly taken
+`CONTROL` | pin 13 | Logging | SPI clock | Possibly taken
+
+
+### Analog
+TYPE | pin # | System | Description | Note
+-----|-------|--------|-------------|------
+`INPUT` | pin A1 | Sensor | Gets soil moisture sensor readings
+`CONTROL` | pin A4 | Sensor | RTC I2C (SDA) connection | **CRITICAL**
+`CONTROL` | pin A5 | Sensor | RTC I2C (SCL) connection | **CRITICAL**
 
 ## Modes
-* 0 - **Normal mode**: arduino controls when to turn lights on/off, when to measure and log data. Completely automatic system
-* 1 - **Light control**: controls lights, disables the normal mode
-  * 10 - turns lights off
-  * 11 - turns lights on
-* 2 - **Data logging switch**
-  * 20 - enables safe removal of an SD card from the slot. Disables data logging and measurements. Closes a file for writing.
-  * 21 - enables data logging and measurements. Requires an entered SD card, opens a file for writing.
-* 3 - **Time control**
-  * 30 - print current rtc time
-  * 31 - sets current rtc time to system time
-* 4 - **Heating control**
-  * 40 - disable heating
-  * 41 - enable heating
-* 12345 - **Closing switch**: disables all arduino action (Stops everything).
+MODE CODE | REMOTE BUTTON| MODE TYPE | MODE NAME | DESCRIPTION | Note
+----------|--------------|-----------|-----------|-------------|-----
+0 | 0 | User mode | GLOBAL LOCK | Completely automatic system, user can request measurements and time. Switches between `User mode` and `Admin mode`
+1 | 1 | Admin mode | Lighting state | Turns lights on/off if `Light admin` privileges are on
+2 | 2 | Admin mode | Logging | Turns logging on/off
+3 | 3 | Admin mode | Heating state | Turns heating on/of if `Heat admin` privileges are on | Currently not in use
+4 | 4 | Admin mode | Light admin | Controls lighting privileges
+5 | 5 | User mode | Measure | Measures input from sensors and logs the data
+6 | 6 | Admin mode | Heat admin | Controls heating privileges
+7 | 7 | Admin mode | Watering state | Turns watering on/off if `Watering admin` privileges are on. | Currently not in use
+8 | 8 | User mode | Time | Retrieve system time
+9 | 9 | Admin mode | Fan speed set | Starts fan speed setting | Currently not in use
+10 | GOTO | Admin mode | Watering admin | Controls watering privileges | Currently not in use
+11 | 10+ | Admin mode | Fan admin | Controls fan privileges | Currently not in use
+12345 | none | Restricted | STOP command | Stops the whole processor and all operations | Accessible only through serial PC connection
 
 ## Theory
 * PWM heating element custom resolution: 
