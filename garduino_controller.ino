@@ -7,17 +7,20 @@
 #include <stdlib.h>
 #include <IRremote.h>
 
-#define DHTPIN 7 // dht22 pin
 #define DHTTYPE DHT22
 
-#define HEATPIN 8
-#define LOGGING_LED 5
+#define SensorPowerPin 2
 #define IR_PIN 3
 #define chipSelect 4
+#define LOGGING_LED 5
 #define lightControlPin 6
-#define SensorPowerPin 2
-#define humiditySensorReadPin A1
+#define DHTPIN 7 // dht22 pin
+#define HEATPIN 8
 #define waterControlPin 9
+//PINS 10,11,12 
+#define rGbControlPin A0
+#define humiditySensorReadPin A1
+#define RgbControlPin A2
 
 /*
   const int lightControlPin = 6;
@@ -260,6 +263,8 @@ class Control {
     }
   public : void setLogging(int value) {
       writeState(LOGGING, value);
+      if (value) digitalWrite(LOGGING_LED, HIGH);
+      else digitalWrite(LOGGING_LED, LOW);
     }
   public : void setWritten(int value) {
       writeState(WRITTEN, value);
@@ -552,6 +557,22 @@ class Control {
       }
     }
 
+    public : void tick(DateTime now){
+      if (now.second() % 2 == 0 && (now.hour() % 1 == 0) && now.minute() % 1 == 0){
+        if(getLock()){
+          digitalWrite(RgbControlPin, HIGH);
+          digitalWrite(rGbControlPin, LOW);
+        }else{
+          digitalWrite(rGbControlPin, HIGH);
+          if(getLightAdmin() || getHeatAdmin() || getWateringAdmin() || getFanAdmin()) digitalWrite(RgbControlPin, HIGH);
+          else digitalWrite(RgbControlPin, LOW);
+        }
+      } else{
+        digitalWrite(RgbControlPin, LOW);
+        digitalWrite(rGbControlPin, LOW);
+      }
+    }
+
     public : Control() {
     }
 };
@@ -721,6 +742,8 @@ void setup() {
   pinMode(HEATPIN, OUTPUT);
   pinMode(IR_PIN, INPUT);
   pinMode(LOGGING_LED, OUTPUT);
+  pinMode(RgbControlPin, OUTPUT);
+  pinMode(rGbControlPin, OUTPUT);
 
   digitalWrite(LOGGING_LED, HIGH);
 
@@ -739,9 +762,6 @@ void loop() {
     sys.mainSwitch(choice, now);
   }
 
-  if (sys.getLogging()) digitalWrite(LOGGING_LED, HIGH);
-  else digitalWrite(LOGGING_LED, LOW);
-
 
   sys.readRemote(now);
 
@@ -751,6 +771,7 @@ void loop() {
   */
 
   sys.autoLight(now);
+  sys.tick(now);
 
   /**
      Humidity measurement - later we're going to split off measuring soil moisture and other measurements
