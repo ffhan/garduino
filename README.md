@@ -24,7 +24,7 @@ TYPE | pin # | System | Description | Note
 -----|-------|--------|-------------|------
 `OUTPUT` | pin A0 | System | Controls red ticker color
 `INPUT` | pin A1 | Sensor | Gets soil moisture sensor readings
-`OUTPUT` | pin A2 | Sensor | Controls green ticker color
+`OUTPUT` | pin A2 | System | Controls green ticker color
 `CONTROL` | pin A4 | Sensor | RTC I2C (SDA) connection | **CRITICAL**
 `CONTROL` | pin A5 | Sensor | RTC I2C (SCL) connection | **CRITICAL**
 
