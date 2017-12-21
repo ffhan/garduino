@@ -13,15 +13,18 @@ TYPE | pin # | System | Description | Note
 `INPUT` | pin 7 | Sensor | Gets DHT22 sensor readings
 `OUTPUT` | pin 8 | Heating | Controls a heating element | **NOT IN USE**
 `OUTPUT` | pin 9 | Watering | Controls a solenoid valve (watering system) | **NOT IN USE**
-`CONTROL` | pin 11 | Logging | SPI MOSI | Possibly taken
-`CONTROL` | pin 12 | Logging | SPI MISO | Possibly taken
-`CONTROL` | pin 13 | Logging | SPI clock | Possibly taken
+**UNKNOWN** | pin 10 | **UNKNOWN** | Gives out a signal, meaning it's used for something. | Possibly used by SD card reader
+`CONTROL` | pin 11 | Logging | SPI MOSI | Taken, don't use this pin
+`CONTROL` | pin 12 | Logging | SPI MISO | Taken, don't use this pin
+`CONTROL` | pin 13 | Logging | SPI clock | Taken, don't use this pin
 
 
 ### Analog
 TYPE | pin # | System | Description | Note
 -----|-------|--------|-------------|------
+`OUTPUT` | pin A0 | System | Controls red ticker color
 `INPUT` | pin A1 | Sensor | Gets soil moisture sensor readings
+`OUTPUT` | pin A2 | Sensor 
 `CONTROL` | pin A4 | Sensor | RTC I2C (SDA) connection | **CRITICAL**
 `CONTROL` | pin A5 | Sensor | RTC I2C (SCL) connection | **CRITICAL**
 
