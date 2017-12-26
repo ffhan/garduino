@@ -17,7 +17,7 @@
 #define DHTPIN 7 // dht22 pin
 #define HEATPIN 8
 #define waterControlPin 9
-//PINS 10,11,12 
+//PINS 10,11,12
 #define rGbControlPin A0
 #define humiditySensorReadPin A1
 #define RgbControlPin A2
@@ -54,6 +54,120 @@ decode_results results;
 char fileName[13];
 
 const int measureNumber = 5;
+
+class Remote {
+  private : byte prefix = 0xFF;
+
+  private : byte errorCode = 200; // change it in code enum too.
+  
+  private : typedef enum {LOCK = 0x22DD, LIGHT = 0x807F, LOGGING = 0xA05F,
+                            HEATING = 0x906F, WATERING = 0x40BF, MEASURE = 0x609F,
+                            FAN = 0x50AF, TIME = 0xE01F,
+                            HOLD = 0xFFFF, TIMEOUT = 0x200 //TIMEOUT IS CODE 200, HTTP CODE FOR OK; HERE MEANING NOTHING SHOULD HAPPEN.
+                           } code;
+  private : code lastClick;
+  private : byte holdLen = 0;
+  private : unsigned long timer = 0;
+
+  private : byte holdRange = 5; //in hold signals
+  private : byte range = 150; //in milliseconds -> IF THE REMOTE DOESN'T RESPOND, READ OR IF ANY ERROR IS OCCURING THIS IS THE FIRST THING TO CHECK.
+  //CHECK THE READING TIME.
+
+  private : byte sendingCode = errorCode;
+
+  public : byte getInstruction(){
+    return sendingCode;
+  }
+  public : byte getErrorCode(){
+    return errorCode;
+  }
+  
+  public : void readRemote(){
+    long mask = 0xFFFF;
+    long prefixMask = 0xFF0000;
+    if (irrecv.decode(&results))
+      {
+        //Serial.println(results.value, HEX);
+        if((results.value & prefixMask) >> 16 != prefix){
+          Serial.println(F("Wrong remote!"));
+        }
+        else{
+          switch((code) mask & results.value){
+            case HOLD:
+            holdLen++;
+            //Serial.println(millis() - timer);
+            //Serial.println(holdLen);
+            break;
+      
+            case TIMEOUT:
+            return;
+      
+            default:
+            lastClick = (code) mask & results.value;
+            Serial.println(lastClick, HEX);
+            holdLen = 0;
+            break;
+          }
+          timer = millis();
+        }
+        
+        //printState();
+        irrecv.resume(); // Receive the next value
+      }
+  }
+  
+  private : bool isLongPress(){
+    if(holdLen > holdRange) return true;
+    return false;
+  }
+
+  public : void onTick(){
+    if(lastClick == TIMEOUT) sendingCode = errorCode; // if nothing is clicked.
+    if(millis() - timer >= range){
+      byte mode = errorCode;
+      switch(lastClick){
+        case LOCK:
+        mode = 0;
+        break;
+
+        case LIGHT:
+        if(isLongPress()) mode = 4;
+        else mode = 1;
+        break;
+
+        case LOGGING:
+        mode = 2;
+        break;
+
+        case HEATING:
+        if(isLongPress()) mode = 6;
+        else mode = 3;
+        break;
+
+        case WATERING:
+        if(isLongPress()) mode = 10;
+        else mode = 7;
+        break;
+        
+        case MEASURE:
+        mode = 5;
+        break;
+
+        case FAN:
+        if(isLongPress()) mode = 11;
+        else mode = 9;
+        break;
+
+        case TIME:
+        mode = 8;
+        break;
+      }
+      lastClick = TIMEOUT;
+      holdLen = 0;
+      sendingCode = mode;
+    }
+  }
+};
 
 class Measuring {
     int soilMoisture;
@@ -148,6 +262,7 @@ class Control {
                            } sector;
 
   public : Measuring measure = Measuring();
+  public : Remote remote = Remote();
 
   private : int readPosition(int posit) {
       int tmp = 1 << posit; //creates an integer with only one bit on the poisition posit.
@@ -254,7 +369,7 @@ class Control {
 
   public : void setLock(int value) {
       writeState(LOCK, value);
-      if(value == 1){
+      if (value == 1) {
         setLightAdmin(0);
         setHeatAdmin(0);
         setWateringAdmin(0);
@@ -317,7 +432,7 @@ class Control {
       }
     }
 
-  public : void mainSwitch(int choice, DateTime now) {
+  public : void mainSwitch(byte choice, DateTime now) {
       if (getLock()) {
         switch (choice) {
           case 8:
@@ -466,85 +581,7 @@ class Control {
       }
     }
 
-  public : void readRemote(DateTime now) {
-      if (irrecv.decode(&results))
-      {
-        //Serial.println(results.value, HEX);
-        switch (results.value) {
-          case 0xFF00FF:
-            Serial.println("POWER ON/OFF");
-            mainSwitch(100, now);
-            break;
-          case 0xFF10EF:
-            Serial.println("EJECT");
-            mainSwitch(110, now);
-            break;
-          case 0xFF9867:
-            Serial.println("OK");
-            printState();
-            mainSwitch(120, now);
-            break;
-          case 0xFFCA35:
-            Serial.println("UP");
-            break;
-          case 0xFF18E7:
-            Serial.println("DOWN");
-            break;
-          case 0xFFF20D:
-            Serial.println("LEFT");
-            break;
-          case 0xFFEA15:
-            Serial.println("RIGHT");
-            break;
-          case 0xFF807F:
-            Serial.println("1");
-            mainSwitch(1, now);
-            break;
-          case 0xFFA05F:
-            Serial.println("2");
-            mainSwitch(2, now);
-            break;
-          case 0xFF906F:
-            Serial.println("3");
-            mainSwitch(3, now);
-            break;
-          case 0xFF40BF:
-            Serial.println("4");
-            mainSwitch(4, now);
-            break;
-          case 0xFF609F:
-            Serial.println("5");
-            mainSwitch(5, now);
-            break;
-          case 0xFF50AF:
-            Serial.println("6");
-            mainSwitch(6, now);
-            break;
-          case 0xFFC03F:
-            Serial.println("7");
-            mainSwitch(7, now);
-            break;
-          case 0xFFE01F:
-            Serial.println("8");
-            mainSwitch(8, now);
-            break;
-          case 0xFFD02F:
-            Serial.println("9");
-            mainSwitch(9, now);
-            break;
-          case 0xFF22DD:
-            Serial.println("0");
-            mainSwitch(0, now);
-            break;
-          case 0xFFFFFF:
-            break;
-        }
-        //printState();
-        irrecv.resume(); // Receive the next value
-      }
-    }
-
-    public : void autoLight(DateTime now){
+  public : void autoLight(DateTime now) {
       if (!getLightAdmin()) {
         // if time is inside interval <8am,10pm> and light is not on (user has not turned it on) then:
         if (getDecimalTime(now) >= 8.0 && getDecimalTime(now) < 22.0) { //TODO: not constantly turning on
@@ -557,23 +594,29 @@ class Control {
       }
     }
 
-    public : void tick(DateTime now){
-      if (now.second() % 2 == 0 && (now.hour() % 1 == 0) && now.minute() % 1 == 0){
-        if(getLock()){
+  public : void tick(DateTime now) {
+      if (now.second() % 2 == 0 && (now.hour() % 1 == 0) && now.minute() % 1 == 0) {
+        if (getLock()) {
           digitalWrite(RgbControlPin, HIGH);
           digitalWrite(rGbControlPin, LOW);
-        }else{
+        } else {
           digitalWrite(rGbControlPin, HIGH);
-          if(getLightAdmin() || getHeatAdmin() || getWateringAdmin() || getFanAdmin()) digitalWrite(RgbControlPin, HIGH);
+          if (getLightAdmin() || getHeatAdmin() || getWateringAdmin() || getFanAdmin()) digitalWrite(RgbControlPin, HIGH);
           else digitalWrite(RgbControlPin, LOW);
         }
-      } else{
+      } else {
         digitalWrite(RgbControlPin, LOW);
         digitalWrite(rGbControlPin, LOW);
       }
-    }
+  }
 
-    public : Control() {
+  public : void getRemoteInstructions(DateTime now) {
+    byte instr = remote.getInstruction();
+    if(instr == remote.getErrorCode()) return;
+    mainSwitch(remote.getInstruction(), now);
+  }
+
+  public : Control() {
     }
 };
 
@@ -702,7 +745,6 @@ void Logging::printTime(DateTime now) {
   Serial.print(now.minute()); Serial.print(F(":")); Serial.print(now.second()); Serial.println(F(";"));
 }
 
-
 double getDecimalTime(DateTime now) {
   return (double)now.hour() + ((double)now.minute()) / ((double)60.0) + ((double)now.second()) / ((double)3600.0);
 }
@@ -763,7 +805,9 @@ void loop() {
   }
 
 
-  sys.readRemote(now);
+  sys.remote.readRemote();
+  sys.remote.onTick();
+  sys.getRemoteInstructions(now);
 
   /*
      Ideally the plants should get 14-16 hours of light. We are going to go with 14 hours of light for testing.
