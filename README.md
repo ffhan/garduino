@@ -35,14 +35,14 @@ MODE CODE | REMOTE BUTTON| MODE TYPE | MODE NAME | DESCRIPTION | Note
 1 | 1 | Admin mode | Lighting state | Turns lights on/off if `Light admin` privileges are on
 2 | 2 | Admin mode | Logging | Turns logging on/off
 3 | 3 | Admin mode | Heating state | Turns heating on/of if `Heat admin` privileges are on | Currently not in use
-4 | 4 | Admin mode | Light admin | Controls lighting privileges
+4 | HOLD 1 | Admin mode | Light admin | Controls lighting privileges
 5 | 5 | User mode | Measure | Measures input from sensors and logs the data
-6 | 6 | Admin mode | Heat admin | Controls heating privileges
-7 | 7 | Admin mode | Watering state | Turns watering on/off if `Watering admin` privileges are on. | Currently not in use
+6 | HOLD 3 | Admin mode | Heat admin | Controls heating privileges
+7 | 4 | Admin mode | Watering state | Turns watering on/off if `Watering admin` privileges are on. | Currently not in use
 8 | 8 | User mode | Time | Retrieve system time
-9 | 9 | Admin mode | Fan speed set | Starts fan speed setting | Currently not in use
-10 | GOTO | Admin mode | Watering admin | Controls watering privileges | Currently not in use
-11 | 10+ | Admin mode | Fan admin | Controls fan privileges | Currently not in use
+9 | 6 | Admin mode | Fan speed set | Starts fan speed setting | Currently not in use
+10 | HOLD 4 | Admin mode | Watering admin | Controls watering privileges | Currently not in use
+11 | HOLD 6 | Admin mode | Fan admin | Controls fan privileges | Currently not in use
 12345 | none | Restricted | STOP command | Stops the whole processor and all operations | Accessible only through serial PC connection
 
 ## Theory
