@@ -104,7 +104,7 @@ class Remote {
       
             default:
             lastClick = (code) mask & results.value;
-            Serial.println(lastClick, HEX);
+            //TODO: DEBUG MODE Serial.println(lastClick, HEX);
             holdLen = 0;
             break;
           }
@@ -127,7 +127,7 @@ class Remote {
       byte mode = errorCode;
       switch(lastClick){
         case LOCK:
-        mode = 0;
+        if(isLongPress()) mode = 0;
         break;
 
         case LIGHT:

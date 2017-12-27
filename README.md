@@ -31,7 +31,7 @@ TYPE | pin # | System | Description | Note
 ## Modes
 MODE CODE | REMOTE BUTTON| MODE TYPE | MODE NAME | DESCRIPTION | Note
 ----------|--------------|-----------|-----------|-------------|-----
-0 | 0 | User mode | GLOBAL LOCK | Completely automatic system, user can request measurements and time. Switches between `User mode` and `Admin mode`
+0 | HOLD 0 | User mode | GLOBAL LOCK | Completely automatic system, user can request measurements and time. Switches between `User mode` and `Admin mode`
 1 | 1 | Admin mode | Lighting state | Turns lights on/off if `Light admin` privileges are on
 2 | 2 | Admin mode | Logging | Turns logging on/off
 3 | 3 | Admin mode | Heating state | Turns heating on/of if `Heat admin` privileges are on | Currently not in use
@@ -44,6 +44,14 @@ MODE CODE | REMOTE BUTTON| MODE TYPE | MODE NAME | DESCRIPTION | Note
 10 | HOLD 4 | Admin mode | Watering admin | Controls watering privileges | Currently not in use
 11 | HOLD 6 | Admin mode | Fan admin | Controls fan privileges | Currently not in use
 12345 | none | Restricted | STOP command | Stops the whole processor and all operations | Accessible only through serial PC connection
+
+## TODO
+[] Fan speed setting
+[] Heating system
+[] Watering system
+[] Debug mode - prints out data from under the hood
+[] Consecutive measurements
+[] Isolated measurements frequencies (soil moisture/temperature/humidity/etc..)
 
 ## Theory
 * PWM heating element custom resolution: 
