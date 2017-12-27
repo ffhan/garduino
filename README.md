@@ -46,12 +46,12 @@ MODE CODE | REMOTE BUTTON| MODE TYPE | MODE NAME | DESCRIPTION | Note
 12345 | none | Restricted | STOP command | Stops the whole processor and all operations | Accessible only through serial PC connection
 
 ## TODO
-[] Fan speed setting
-[] Heating system
-[] Watering system
-[] Debug mode - prints out data from under the hood
-[] Consecutive measurements
-[] Isolated measurements frequencies (soil moisture/temperature/humidity/etc..)
+- [ ] Fan speed setting
+- [ ] Heating system
+- [ ] Watering system
+- [ ] Debug mode - prints out data from under the hood
+- [ ] Consecutive measurements
+- [ ] Isolated measurements frequencies (soil moisture/temperature/humidity/etc..)
 
 ## Theory
 * PWM heating element custom resolution: 
