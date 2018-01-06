@@ -38,7 +38,7 @@
 SdFat sd; // File system object.
 SdFile file; // Log file.
 
-RTC_DS1307 rtc;
+RTC_DS3231 rtc;
 DHT dht(DHTPIN, DHTTYPE);
 
 IRrecv irrecv(IR_PIN);
@@ -60,7 +60,7 @@ class Remote {
 
   private : byte errorCode = 200; // change it in code enum too.
   
-  private : typedef enum {LOCK = 0x22DD, LIGHT = 0x807F, LOGGING = 0xA05F,
+  public : typedef enum {LOCK = 0x22DD, LIGHT = 0x807F, LOGGING = 0xA05F,
                             HEATING = 0x906F, WATERING = 0x40BF, MEASURE = 0x609F,
                             FAN = 0x50AF, TIME = 0xE01F,
                             HOLD = 0xFFFF, TIMEOUT = 0x200 //TIMEOUT IS CODE 200, HTTP CODE FOR OK; HERE MEANING NOTHING SHOULD HAPPEN.
@@ -254,7 +254,9 @@ class Control {
   private : int _data = 0x0057;
   private : int fanSpeed_bitsize = 3;
 
-  private : typedef enum {LOCK = 0, LOGGING = 1, WRITTEN = 2, IS_INITIALISED = 3,
+  private : DateTime now;
+
+  public : typedef enum {LOCK = 0, LOGGING = 1, WRITTEN = 2, IS_INITIALISED = 3,
                             LIGHTING_STATE = 4, LIGHT_ADMIN = 5,
                             HEATING_STATE = 6, HEAT_ADMIN = 7,
                             WATERING_STATE = 8, WATERING_ADMIN = 9,
@@ -378,8 +380,8 @@ class Control {
     }
   public : void setLogging(int value) {
       writeState(LOGGING, value);
-      if (value) digitalWrite(LOGGING_LED, HIGH);
-      else digitalWrite(LOGGING_LED, LOW);
+      /*if (value) digitalWrite(LOGGING_LED, HIGH);
+      else digitalWrite(LOGGING_LED, LOW);*/
     }
   public : void setWritten(int value) {
       writeState(WRITTEN, value);
@@ -401,6 +403,8 @@ class Control {
     }
   public : void setWateringState(int value) {
       writeState(WATERING_STATE, value);
+      if(value == 0) digitalWrite(waterControlPin, LOW);
+      else digitalWrite(waterControlPin, HIGH);
     }
   public : void setWateringAdmin(int value) {
       writeState(WATERING_ADMIN, value);
@@ -430,9 +434,16 @@ class Control {
             break;
           }
       }
-    }
+  }
 
-  public : void mainSwitch(byte choice, DateTime now) {
+  public : DateTime getTime(){
+    return now;  
+  }
+  public : void updateTime(){
+    now = rtc.now();
+  }
+  
+  public : void mainSwitch(byte choice) {
       if (getLock()) {
         switch (choice) {
           case 8:
@@ -581,7 +592,7 @@ class Control {
       }
     }
 
-  public : void autoLight(DateTime now) {
+  public : void autoLight() {
       if (!getLightAdmin()) {
         // if time is inside interval <8am,10pm> and light is not on (user has not turned it on) then:
         if (getDecimalTime(now) >= 8.0 && getDecimalTime(now) < 22.0) { //TODO: not constantly turning on
@@ -594,26 +605,59 @@ class Control {
       }
     }
 
-  public : void tick(DateTime now) {
-      if (now.second() % 2 == 0 && (now.hour() % 1 == 0) && now.minute() % 1 == 0) {
-        if (getLock()) {
-          digitalWrite(RgbControlPin, HIGH);
-          digitalWrite(rGbControlPin, LOW);
-        } else {
-          digitalWrite(rGbControlPin, HIGH);
-          if (getLightAdmin() || getHeatAdmin() || getWateringAdmin() || getFanAdmin()) digitalWrite(RgbControlPin, HIGH);
-          else digitalWrite(RgbControlPin, LOW);
-        }
-      } else {
-        digitalWrite(RgbControlPin, LOW);
+  public : void tick() {
+    
+    if (now.second() % 2 == 0 && (now.hour() % 1 == 0) && now.minute() % 1 == 0) {
+      digitalWrite(LOGGING_LED, LOW); // ensure every 2 seconds is only mode colors.
+      if (getLock()) {
+        digitalWrite(RgbControlPin, HIGH);
         digitalWrite(rGbControlPin, LOW);
+      } else {
+        digitalWrite(rGbControlPin, HIGH);
+        if (getLightAdmin() || getHeatAdmin() || getWateringAdmin() || getFanAdmin()) digitalWrite(RgbControlPin, HIGH);
+        else digitalWrite(RgbControlPin, LOW);
       }
+    } else {
+      if(getLogging()) digitalWrite(LOGGING_LED, HIGH);
+      else digitalWrite(LOGGING_LED, LOW);
+      
+      digitalWrite(RgbControlPin, LOW);
+      digitalWrite(rGbControlPin, LOW);
+    }
   }
 
-  public : void getRemoteInstructions(DateTime now) {
+  public : void update(){
+
+    updateTime();
+    
+    remote.readRemote();
+    remote.onTick();
+    getRemoteInstructions();
+
+    autoLight();
+    tick();
+    logControl();
+    
+  }
+
+  public : void getRemoteInstructions() {
     byte instr = remote.getInstruction();
     if(instr == remote.getErrorCode()) return;
-    mainSwitch(remote.getInstruction(), now);
+    mainSwitch(remote.getInstruction());
+  }
+
+  public : void logControl(){
+    if (now.second() == 0 && (now.hour() % 1 == 0) && now.minute() % 30 == 0) {
+      if (!getWritten()) {
+  
+        if (getLogging()) logger.logData(now, measure);
+        else Serial.println(F("Didn't write, that's what you wanted, right?"));
+  
+        setWritten(1);
+      }
+    } else {
+      setWritten(0);
+    }
   }
 
   public : Control() {
@@ -749,6 +793,44 @@ double getDecimalTime(DateTime now) {
   return (double)now.hour() + ((double)now.minute()) / ((double)60.0) + ((double)now.second()) / ((double)3600.0);
 }
 
+class Action{
+  private : int code;
+  private : void (Control::*action)();
+
+  public : typedef enum {SHORT = 0, LONG = 1, LEVEL = 2} clickType;
+  private : clickType type;
+  private : bool mode;
+  private : bool global;
+
+  public : Action(int code, bool mode, bool global, clickType type, void (Control::*func)()){
+    this->code = code;
+    this->action = func;
+    this->type = type;
+    this->mode = mode;
+    this->global = global;
+  }
+
+  public : bool getMode(){
+    return mode;
+  }
+
+  public : bool isGlobal(){
+    return global;
+  }
+
+  public : clickType getType(){
+    return type;
+  }
+
+  public : void execute(){
+    /*switch(type){
+      case SHORT:
+      if(global && 
+    }*/
+  }
+  
+};
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -776,6 +858,12 @@ void setup() {
     Serial.println(F("Couldn't find RTC"));
     while (1);
   }
+
+  /*
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  rtc.adjust(rtc.now() + TimeSpan(0,0,0,17));
+  */
+  
   Serial.println(F("done."));
 
   pinMode(lightControlPin, OUTPUT); // Control light control pin as output
@@ -787,7 +875,7 @@ void setup() {
   pinMode(RgbControlPin, OUTPUT);
   pinMode(rGbControlPin, OUTPUT);
 
-  digitalWrite(LOGGING_LED, HIGH);
+  //digitalWrite(LOGGING_LED, HIGH);
 
   logger.printHeader();
   Serial.println(F("Setup complete!"));
@@ -795,46 +883,12 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  DateTime now = rtc.now(); // read time.
 
   while (Serial.available())
   {
     int choice = Serial.parseInt();
-    sys.mainSwitch(choice, now);
+    sys.mainSwitch(choice);
   }
 
-
-  sys.remote.readRemote();
-  sys.remote.onTick();
-  sys.getRemoteInstructions(now);
-
-  /*
-     Ideally the plants should get 14-16 hours of light. We are going to go with 14 hours of light for testing.
-     That means 8am - 10pm.
-  */
-
-  sys.autoLight(now);
-  sys.tick(now);
-
-  /**
-     Humidity measurement - later we're going to split off measuring soil moisture and other measurements
-     beacause some are more critical than others (and should be measured more often).
-
-     We want to measure moisture every 6 hours so that we have 4 measurements per day.
-     Considering moisture is not going to change so radically this is just fine.
-     Measurement hours: 1am, 7am, 13h, 19h
-  */
-
-  if (now.second() == 0 && (now.hour() % 1 == 0) && now.minute() % 30 == 0) {
-    if (!sys.getWritten()) {
-
-      if (sys.getLogging()) logger.logData(now, sys.measure);
-      else Serial.println(F("Didn't write, that's what you wanted, right?"));
-
-      sys.setWritten(1);
-    }
-  } else {
-    sys.setWritten(0);
-  }
+  sys.update();
 }
