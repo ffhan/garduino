@@ -8,8 +8,11 @@ byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 IPAddress ip(192,168,0,1);
 const char *server = "garduino20180215111317.azurewebsites.net";
 //const char server[] PROGMEM = {"garduino20180215111317.azurewebsites.net"};
+
 //const char token[] PROGMEM = {"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhZG1pbi5vcmciLCJqdGkiOiI1Mzk1ZDZlMS02MmMwLTRmNjMtYmMzOS1jOTEyZWFkMDhhYmIiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImI4M2VmZDU0LTVlN2ItNDIwMy04NTNjLWRjODk2MTczNTkxZSIsImV4cCI6MTUxOTAzNjY3NiwiaXNzIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NDQzOTUiLCJhdWQiOiJodHRwczovL2xvY2FsaG9zdDo0NDM5NSJ9.6MeaXtkiLi-qNvSYHSO9JMvbvo7FwpB8_9_pf9D4fFI\r\n"};
 const char host[] PROGMEM = {"Host: garduino20180215111317.azurewebsites.net\r\n"};
+const char codeCall[] PROGMEM = {"PUT /api/Code/latest HTTP/1.1\r\n"};
+
 const char contType[] PROGMEM = {"Content-Type: application/json\r\n"};
 const char cacheCtrl[] PROGMEM = {"Cache-Control: no-cache\r\n"};
 const char newLine[] PROGMEM = {"\r\n"};
@@ -20,6 +23,80 @@ const char deviceId[] PROGMEM = {"c815dc1d-8dda-437f-7d84-08d5745de76a"};
 const char actnFrnt[] PROGMEM = {"\"action\":"}; //action front phrase, "action":
 const char actnBack[] PROGMEM = {",\""}; //action back phrase
 const char minPhrs[] PROGMEM = {"\""}; //miminal phrase, only " char.
+
+const char code1[] PROGMEM = {"{\"dateTime\":\""};
+const char points[] PROGMEM = {":"};
+const char dash[] PROGMEM = {"-"};
+const char space[] PROGMEM = {" "};
+const char zero[] PROGMEM = {"0"};
+const char code2[] PROGMEM = {"\",\"deviceId\":\""};
+const char code3[] PROGMEM = {"\"}\r\n"};
+
+typedef int (*Fragmentor) (char *fragment);
+typedef int (*EProcessor) (int index);
+typedef void (*ContentWriter)();
+
+int buildCodeJson(Fragmentor fp, Fragmentor tp, EProcessor ep, DateTime now){
+  //fp is fragment processor, tp is time processor. We use delegates because we have to ensure that we 
+  //go through the same exact process for content-length and for writing out json.
+  //now is needed to process code execution time.
+  //ep is EEPROM processor, needed to get device Id out of EEPROM.
+  int len = 0;
+  char ts[5];
+
+  len += fp(code1);
+  //Serial.println(len);
+  int t = now.year();
+  for(int i = 10; i <= 1000; i = i * 10){
+    if(t < i) len += fp(zero);
+  }
+  //Serial.println(len);
+  
+  sprintf(ts, "%d", t);
+  len += tp(ts);
+  len += fp(dash);
+  //Serial.println(len);
+  
+  for(int z = 0; z < 5; z++){
+    if(z == 0) t = now.month();
+    else if(z == 1) t = now.day();
+    else if(z == 2) t = now.hour();
+    else if(z == 3) t = now.minute();
+    else t = now.second();
+    if(t < 10) fp(zero);
+    sprintf(ts, "%d", t);
+    len += tp(ts);
+    if(z == 0) len += fp(dash);
+    else if(z == 1) len += fp(space);
+    else if(z == 2 || z == 3) len += fp(points);
+  }
+  //Serial.println(len);
+  len += fp(code2);
+  //Serial.println(len);
+  len += ep(460); //460 is the device Id address.
+  //Serial.println(len);
+  len += fp(code3);
+  //Serial.println(len);
+  return len;
+}
+
+/*
+"{\"dateTime\":\"
+2018
+-
+02
+-
+15
+space
+13
+:
+36
+:
+00
+\",\"deviceId\":\"
+c815dc1d-8dda-437f-7d84-08d5745de76a
+\"}\r\n";
+*/
 EthernetClient client;
 
 RTC_DS3231 rtc;
@@ -49,6 +126,36 @@ void printEeprom(int index){
   }
 }
 
+int _eeprom(int index, bool doWrite){
+  char buff;
+  EEPROM.get(index, buff);
+  while(buff != '\0'){
+    index++;
+    if(doWrite){
+      client.print(buff);
+      Serial.print(buff);
+    }
+    EEPROM.get(index, buff);
+  }
+  return index;
+}
+int processEeprom(int index){
+  return _eeprom(index, true) - index;
+}
+
+int eepromLen(int index){
+  return _eeprom(index, false) - index;
+}
+
+int processValue(char *value){
+  client.print(value);
+  Serial.print(value);
+  return strlen(value);
+}
+int valueLen(char *value){
+  return strlen(value);
+}
+
 void writeFragment(char *fragment){ // fragment NEEDS string escape char.
   char buff = pgm_read_byte_near(fragment);
   int i = 0;
@@ -58,6 +165,18 @@ void writeFragment(char *fragment){ // fragment NEEDS string escape char.
     Serial.print(buff);
     buff = pgm_read_byte_near(fragment + i);
   }
+}
+
+int processFragment(char *fragment){
+  char buff = pgm_read_byte_near(fragment);
+  int i = 0;
+  while(buff != '\0'){
+    i++;
+    client.print(buff);
+    Serial.print(buff);
+    buff = pgm_read_byte_near(fragment + i);
+  }
+  return i;
 }
 
 int fragmentLen(char *fragment){
@@ -93,8 +212,7 @@ void writeJwtToken(){
 }
 
 void writeRoute(char *route){
-  client.print(route);
-  Serial.print(route);
+  writeFragment(route);
 }
 void writeHost(){
   writeFragment(host);
@@ -137,7 +255,16 @@ void getter(char *route){
       printConnFailed();
   }
 }
-
+void writeCodeContent(){
+  writeFragment(contLen);
+  DateTime now = rtc.now();
+  int len = buildCodeJson(&fragmentLen, &valueLen, &eepromLen, now);
+  client.print(len);
+  Serial.print(len);
+  writeNewLine();
+  writeNewLine();
+  buildCodeJson(&processFragment, &processValue, &processEeprom, now);
+}
 
 void writeContent(char *json){
   writeFragment(contLen);
@@ -150,7 +277,7 @@ void writeContent(char *json){
 }
 
 //USE FOR POST & PUT
-void poster(char *route, bool writeToken, char *json){
+void poster(char *route, bool writeToken, ContentWriter cw){
   if (connectToServ()) {
       printMakeHttp();
 
@@ -160,7 +287,7 @@ void poster(char *route, bool writeToken, char *json){
       writeConnection();
       writeContentType();
       writeCacheType();
-      writeContent(json);
+      cw();
       writeNewLine();
       printOk();
     } 
@@ -191,16 +318,14 @@ void getCode(){ //working
   Serial.println(code);
 }
 void login(){ //working
-  char json[] = "{\"Email\":\"admin@admin.org\",\"Password\":\"Fran_97Sokol\",\"RememberMe\":\"false\"}\r\n\r\n";
+  char json[] = "{\"Email\":\"admin@admin.org\",\"Password\":\"Fran_97Sokol\",\"RememberMe\":\"false\"}\r\n";
   char login[] = "POST /api/account HTTP/1.1\r\n";
-  poster(login, false, json);
+  //poster(login, false, json);
   parseResponse(minPhrs, minPhrs, (int*) NULL, true, 0); //store token between " and " to EEPROM address 0+.
 }
 
 void completeCode(){ //working
-  char call[] = "PUT /api/Code/latest HTTP/1.1\r\n";
-  char json[] = "{\"dateTime\":\"2018-02-15 13:36:00\",\"deviceId\":\"c815dc1d-8dda-437f-7d84-08d5745de76a\"}\r\n\r\n";
-  poster(call, true, json);
+  poster(codeCall, true, writeCodeContent);
   printResponse();
 }
 
@@ -208,8 +333,8 @@ void completeCode(){ //working
 
 void postEntry(){ //working
   char call[] = "POST /api/entry HTTP/1.1\r\n";
-  char json[] = "{\"measure\":{\"DateTime\":\"2/17/2018 14:00:00\",\"SoilMoisture\":320,\"SoilDescription\":\"Wet\",\"AirHumidity\":65.0,\"AirTemperature\":22.5,\"LightState\":true},\"deviceId\":\"c815dc1d-8dda-437f-7d84-08d5745de76a\"}\r\n\r\n";
-  poster(call, true, json);
+  //char json[] = "{\"measure\":{\"DateTime\":\"2/17/2018 14:00:00\",\"SoilMoisture\":320,\"SoilDescription\":\"Wet\",\"AirHumidity\":65.0,\"AirTemperature\":22.5,\"LightState\":true},\"deviceId\":\"c815dc1d-8dda-437f-7d84-08d5745de76a\"}\r\n\r\n";
+  //poster(call, true);
   printResponse();
 }
 
@@ -313,7 +438,7 @@ void setup() {
   printOk();
   delay(6000);
   
-  postEntry();
+  completeCode();
 }
 void loop(){
   return;
