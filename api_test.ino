@@ -8,38 +8,41 @@ byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 IPAddress ip(192,168,0,1);
 const char *server = "garduino20180215111317.azurewebsites.net";
 //const char server[] PROGMEM = {"garduino20180215111317.azurewebsites.net"};
-const char token[] PROGMEM = {"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhZG1pbi5vcmciLCJqdGkiOiJhYjJhMjk3Mi02YzM0LTQzMzgtODVjYi0zZDIzZjAwNDQ3YzMiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6Ijk5NjQ5MzQzLTFmMDgtNDYyNS1iY2JmLTY4ZTVkZWNiYjZjYyIsImV4cCI6MTUxODgzNTYxOCwiaXNzIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NDQzOTUiLCJhdWQiOiJodHRwczovL2xvY2FsaG9zdDo0NDM5NSJ9.wTDZubyjx1MnNV98wIKPFN9Z0qjN8AXFLq7vlGogAec\r\n"};
+//const char token[] PROGMEM = {"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhZG1pbi5vcmciLCJqdGkiOiI1Mzk1ZDZlMS02MmMwLTRmNjMtYmMzOS1jOTEyZWFkMDhhYmIiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImI4M2VmZDU0LTVlN2ItNDIwMy04NTNjLWRjODk2MTczNTkxZSIsImV4cCI6MTUxOTAzNjY3NiwiaXNzIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NDQzOTUiLCJhdWQiOiJodHRwczovL2xvY2FsaG9zdDo0NDM5NSJ9.6MeaXtkiLi-qNvSYHSO9JMvbvo7FwpB8_9_pf9D4fFI\r\n"};
 const char host[] PROGMEM = {"Host: garduino20180215111317.azurewebsites.net\r\n"};
 const char contType[] PROGMEM = {"Content-Type: application/json\r\n"};
 const char cacheCtrl[] PROGMEM = {"Cache-Control: no-cache\r\n"};
 const char newLine[] PROGMEM = {"\r\n"};
 const char contLen[] PROGMEM = {"Content-Length: "};
+const char connection[] PROGMEM = {"Connection: close\r\n"};
 EthernetClient client;
 
 RTC_DS3231 rtc;
-/*
- * POST /api/account HTTP/1.1
-Host: garduino20180215032159.azurewebsites.net
-Content-Type: application/json
-Cache-Control: no-cache
-Postman-Token: 4a14b695-9487-266f-5ad4-2ae34ea48414
 
-{
- "Email" : "admin@admin.org",
-  "Password" : "Fran_97Sokol",
-  "RememberMe" : "false"
-}
-*/
-
-void writeFragment(char *fragment){
+/* LEGACY CODE USED TO TRANSPORT TOKEN FROM ROM TO EEPROM.
+void saveToken(){
   char buff;
+  char test;
   int i = 0;
   do{
-    buff = pgm_read_byte_near(fragment + i);
+    buff = pgm_read_byte_near(token + i);
+    EEPROM.put(i, buff);
+    EEPROM.get(i, test);
+    Serial.print(test);
+    i++;
+  }while(buff != '\0');
+  Serial.println(F("success."));
+}*/
+
+void writeFragment(char *fragment){ // fragment NEEDS string escape char.
+  char buff = pgm_read_byte_near(fragment);
+  int i = 0;
+  while(buff != '\0'){
+    i++;
     client.print(buff);
     Serial.print(buff);
-    i++;
-  } while(buff != '\0');
+    buff = pgm_read_byte_near(fragment + i);
+  }
 }
 
 bool connectToServ(){
@@ -48,8 +51,20 @@ bool connectToServ(){
   return f;
 }
 
+void writeConnection(){
+  writeFragment(connection);
+}
+
 void writeJwtToken(){
-  writeFragment(token);
+  char buff;
+  int i = 0;
+  EEPROM.get(i, buff);
+  while(buff != '\0'){
+    i++;
+    client.print(buff);
+    Serial.print(buff);
+    EEPROM.get(i, buff);
+  }
 }
 
 void writeRoute(char *route){
@@ -87,6 +102,7 @@ void getter(char *route){
       writeRoute(route);
       writeHost();
       writeJwtToken();
+      writeConnection();
       writeCacheType();
       writeNewLine();
       printOk();
@@ -100,9 +116,12 @@ void getter(char *route){
 
 void writeContent(char *json){
   writeFragment(contLen);
-  client.print(strlen(*json));
+  client.print(strlen(json));
+  Serial.print(strlen(json));
   writeNewLine();
-  client.print(*json); //for now, later we'll be using buffer write.
+  writeNewLine();
+  client.print(json); //for now, later we'll be using buffer write.
+  Serial.print(json);
 }
 
 //USE FOR POST & PUT
@@ -113,9 +132,11 @@ void poster(char *route, bool writeToken, char *json){
       writeRoute(route);
       writeHost();
       if(writeToken) writeJwtToken();
+      writeConnection();
       writeContentType();
       writeCacheType();
       writeContent(json);
+      writeNewLine();
       printOk();
     } 
     else {
@@ -174,15 +195,23 @@ void setup() {
   }
   printOk();
   delay(6000);
-
-
+  
   getMyId();
-    
 }
-
 void loop(){
-
-if(client.available()) {
+  char c;
+  while(client.connected()){
+    while(client.available()){
+      c = client.read();
+      Serial.print(c);
+    }
+  }
+  Serial.println(F("disconnecting."));
+  client.stop();
+  delay(5000);
+  getMyId();
+  /*
+if(b = client.available()) {
     char c = client.read();
     Serial.print(c);
   }
@@ -192,11 +221,11 @@ if(client.available()) {
     Serial.println(F("disconnecting."));
     client.stop();
 
-    delay(50000);
+    delay(5000);
 
     getMyId();
   }
-
+*/
 }
 
 
