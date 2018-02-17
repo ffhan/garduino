@@ -10,8 +10,16 @@ const char *server = "garduino20180215111317.azurewebsites.net";
 //const char server[] PROGMEM = {"garduino20180215111317.azurewebsites.net"};
 
 //const char token[] PROGMEM = {"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhZG1pbi5vcmciLCJqdGkiOiI1Mzk1ZDZlMS02MmMwLTRmNjMtYmMzOS1jOTEyZWFkMDhhYmIiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImI4M2VmZDU0LTVlN2ItNDIwMy04NTNjLWRjODk2MTczNTkxZSIsImV4cCI6MTUxOTAzNjY3NiwiaXNzIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NDQzOTUiLCJhdWQiOiJodHRwczovL2xvY2FsaG9zdDo0NDM5NSJ9.6MeaXtkiLi-qNvSYHSO9JMvbvo7FwpB8_9_pf9D4fFI\r\n"};
+const char tokenHead[] PROGMEM = {"Authorization: Bearer "};
 const char host[] PROGMEM = {"Host: garduino20180215111317.azurewebsites.net\r\n"};
 const char codeCall[] PROGMEM = {"PUT /api/Code/latest HTTP/1.1\r\n"};
+const char loginPath[] PROGMEM = {"POST /api/account HTTP/1.1\r\n"};
+const char codeGetFrnt[] PROGMEM = {"GET /api/Code/latest/"};
+const char codeGetBack[] PROGMEM = {" HTTP/1.1\r\n"};
+const char nameCall[] PROGMEM = {"GET /api/Device/call/Garduino HTTP/1.1\r\n"};
+const char entryPost[] PROGMEM = {"POST /api/entry HTTP/1.1\r\n"};
+
+const char loginJson[] PROGMEM = {"{\"Email\":\"admin@admin.org\",\"Password\":\"Fran_97Sokol\",\"RememberMe\":\"false\"}\r\n"};
 
 const char contType[] PROGMEM = {"Content-Type: application/json\r\n"};
 const char cacheCtrl[] PROGMEM = {"Cache-Control: no-cache\r\n"};
@@ -35,6 +43,16 @@ const char code3[] PROGMEM = {"\"}\r\n"};
 typedef int (*Fragmentor) (char *fragment);
 typedef int (*EProcessor) (int index);
 typedef void (*ContentWriter)();
+
+void buildGetCodeRoute(char *route){
+  int index = 0;
+  index += dumpFragment(codeGetFrnt, route);
+  index += dumpEeprom(460, route + index);
+  index += dumpFragment(codeGetBack, route + index);
+  route[index - 2] = '\r';
+  route[index - 1] = '\n';
+  route[index] = '\0';
+}
 
 int buildCodeJson(Fragmentor fp, Fragmentor tp, EProcessor ep, DateTime now){
   //fp is fragment processor, tp is time processor. We use delegates because we have to ensure that we 
@@ -80,23 +98,7 @@ int buildCodeJson(Fragmentor fp, Fragmentor tp, EProcessor ep, DateTime now){
   return len;
 }
 
-/*
-"{\"dateTime\":\"
-2018
--
-02
--
-15
-space
-13
-:
-36
-:
-00
-\",\"deviceId\":\"
-c815dc1d-8dda-437f-7d84-08d5745de76a
-\"}\r\n";
-*/
+
 EthernetClient client;
 
 RTC_DS3231 rtc;
@@ -124,6 +126,19 @@ void printEeprom(int index){
     Serial.print(buff);
     EEPROM.get(index, buff);
   }
+}
+
+int dumpEeprom(int index, char *dest){
+  char buff;
+  int i = 0;
+  EEPROM.get(index, buff);
+  while(buff != '\0'){
+    index++;
+    *(dest + i) = buff;
+    i++;
+    EEPROM.get(index, buff);
+  }
+  return i;
 }
 
 int _eeprom(int index, bool doWrite){
@@ -165,6 +180,18 @@ void writeFragment(char *fragment){ // fragment NEEDS string escape char.
     Serial.print(buff);
     buff = pgm_read_byte_near(fragment + i);
   }
+}
+
+int dumpFragment(char *fragment, char *dest){
+  char buff = pgm_read_byte_near(fragment);
+  int i = 0;
+  while(buff != '\0'){
+    *(dest + i) = buff;
+    i++;
+    
+    buff = pgm_read_byte_near(fragment + i);
+  }
+  return i;
 }
 
 int processFragment(char *fragment){
@@ -238,11 +265,17 @@ void printConnFailed(){
   Serial.println(F("connection failed"));
 }
 
-void getter(char *route){
+void writeStaticRoute(char *route){
+  client.print(route);
+  Serial.print(route);
+}
+
+void getter(char *route, bool staticPath){
   if (connectToServ()) {
       printMakeHttp();
 
-      writeRoute(route);
+      if(!staticPath) writeRoute(route);
+      else writeStaticRoute(route);
       writeHost();
       writeJwtToken();
       writeConnection();
@@ -266,6 +299,16 @@ void writeCodeContent(){
   buildCodeJson(&processFragment, &processValue, &processEeprom, now);
 }
 
+void writeLoginContent(){
+  writeFragment(contLen);
+  int len = fragmentLen(loginJson);
+  client.print(len);
+  Serial.print(len);
+  writeNewLine();
+  writeNewLine();
+  processFragment(loginJson);
+}
+
 void writeContent(char *json){
   writeFragment(contLen);
   client.print(strlen(json));
@@ -277,11 +320,12 @@ void writeContent(char *json){
 }
 
 //USE FOR POST & PUT
-void poster(char *route, bool writeToken, ContentWriter cw){
+void poster(char *route, bool writeToken, ContentWriter cw, bool staticPath){
   if (connectToServ()) {
       printMakeHttp();
 
-      writeRoute(route);
+      if(!staticPath) writeRoute(route);
+      else writeStaticRoute(route);
       writeHost();
       if(writeToken) writeJwtToken();
       writeConnection();
@@ -298,43 +342,44 @@ void poster(char *route, bool writeToken, ContentWriter cw){
 }
 
 void getMyId(){ //working
-  char call[] = "GET /api/Device/call/Garduino HTTP/1.1\r\n";
-  getter(call);
-  parseResponse(minPhrs, minPhrs, (int*) NULL, true, 460);
+  
+  getter(nameCall, false);
+  parseResponse(minPhrs, minPhrs, (int*) NULL, true, false, 460);
   printEeprom(460);
 }
 
 void getCode(){ //working
-  //temporarily coded-in deviceId until I program a http parser.
-  char call[] = "GET /api/Code/latest/c815dc1d-8dda-437f-7d84-08d5745de76a HTTP/1.1\r\n";
+  char route[80] = "test";
+  buildGetCodeRoute(route);
   int code = 500; //if 500 then some error happened. parser has to change this value.
-  getter(call);
+  getter(route, true);
   /*
    * Http response parser. If it screws something up it shouldn't screw up EEPROM values.
    * If it does, it'll screw up deviceId storage (460-496)
    * As long as code address exists parser won't write to EEPROM.
    */
-  parseResponse(actnFrnt, actnBack, &code, false, 460);
+  parseResponse(actnFrnt, actnBack, &code, false, false, 460);
   Serial.println(code);
 }
+
 void login(){ //working
-  char json[] = "{\"Email\":\"admin@admin.org\",\"Password\":\"Fran_97Sokol\",\"RememberMe\":\"false\"}\r\n";
-  char login[] = "POST /api/account HTTP/1.1\r\n";
-  //poster(login, false, json);
-  parseResponse(minPhrs, minPhrs, (int*) NULL, true, 0); //store token between " and " to EEPROM address 0+.
+  //COMMENT OUT EEPROM PUT!
+  EEPROM.put(0, "Authorization: Bearer ");
+  poster(loginPath, false, writeLoginContent, false);
+  parseResponse(minPhrs, minPhrs, (int*) NULL, true, true, 22); //store token between " and " to EEPROM address 0+. Start from address 22 because Authorization_token takes that amount of space
 }
 
 void completeCode(){ //working
-  poster(codeCall, true, writeCodeContent);
+  poster(codeCall, true, writeCodeContent, false);
   printResponse();
 }
 
 //TODO: fix
 
 void postEntry(){ //working
-  char call[] = "POST /api/entry HTTP/1.1\r\n";
+  
   //char json[] = "{\"measure\":{\"DateTime\":\"2/17/2018 14:00:00\",\"SoilMoisture\":320,\"SoilDescription\":\"Wet\",\"AirHumidity\":65.0,\"AirTemperature\":22.5,\"LightState\":true},\"deviceId\":\"c815dc1d-8dda-437f-7d84-08d5745de76a\"}\r\n\r\n";
-  //poster(call, true);
+  //poster(entryPost, false, , true);
   printResponse();
 }
 
@@ -350,7 +395,7 @@ void printResponse(){
   client.stop();
 }
 
-void parseResponse(char *before, char *after, int *action, bool eepromWrite, int eepromIndex){
+void parseResponse(char *before, char *after, int *action, bool eepromWrite, bool writeNewLine, int eepromIndex){
   char actStrg[30];
   bool done = false; //is search currently on
   bool found = false; //did we find the correct search phrase?
@@ -391,7 +436,9 @@ void parseResponse(char *before, char *after, int *action, bool eepromWrite, int
           index++;
           if(index >= searchSize){
             done = 1;
-            if(eepromWrite) {EEPROM.put(eepromIndex + writeIndex - searchSize, '\0');
+            if(eepromWrite) {
+              if(writeNewLine) EEPROM.put(eepromIndex + writeIndex - searchSize, "\r\n\0");
+              else EEPROM.put(eepromIndex + writeIndex - searchSize, '\0');
             }
             else actStrg[writeIndex - searchSize] = '\0';
           }
@@ -438,7 +485,8 @@ void setup() {
   printOk();
   delay(6000);
   
-  completeCode();
+  login();
+  getMyId();
 }
 void loop(){
   return;
