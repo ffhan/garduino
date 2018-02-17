@@ -15,6 +15,11 @@ const char cacheCtrl[] PROGMEM = {"Cache-Control: no-cache\r\n"};
 const char newLine[] PROGMEM = {"\r\n"};
 const char contLen[] PROGMEM = {"Content-Length: "};
 const char connection[] PROGMEM = {"Connection: close\r\n"};
+const char deviceId[] PROGMEM = {"c815dc1d-8dda-437f-7d84-08d5745de76a"};
+
+const char actnFrnt[] PROGMEM = {"\"action\":"}; //action front phrase, "action":
+const char actnBack[] PROGMEM = {",\""}; //action back phrase
+const char minPhrs[] PROGMEM = {"\""}; //miminal phrase, only " char.
 EthernetClient client;
 
 RTC_DS3231 rtc;
@@ -34,6 +39,16 @@ void saveToken(){
   Serial.println(F("success."));
 }*/
 
+void printEeprom(int index){
+  char buff;
+  EEPROM.get(index, buff);
+  while(buff != '\0'){
+    index++;
+    Serial.print(buff);
+    EEPROM.get(index, buff);
+  }
+}
+
 void writeFragment(char *fragment){ // fragment NEEDS string escape char.
   char buff = pgm_read_byte_near(fragment);
   int i = 0;
@@ -43,6 +58,16 @@ void writeFragment(char *fragment){ // fragment NEEDS string escape char.
     Serial.print(buff);
     buff = pgm_read_byte_near(fragment + i);
   }
+}
+
+int fragmentLen(char *fragment){
+  char buff = pgm_read_byte_near(fragment);
+  int i = 0;
+  while(buff != '\0'){
+    i++;
+    buff = pgm_read_byte_near(fragment + i);
+  }
+  return i;
 }
 
 bool connectToServ(){
@@ -145,36 +170,128 @@ void poster(char *route, bool writeToken, char *json){
   }
 }
 
-void getMyId(){
+void getMyId(){ //working
   char call[] = "GET /api/Device/call/Garduino HTTP/1.1\r\n";
   getter(call);
+  parseResponse(minPhrs, minPhrs, (int*) NULL, true, 460);
+  printEeprom(460);
 }
 
-void getCode(){
+void getCode(){ //working
   //temporarily coded-in deviceId until I program a http parser.
   char call[] = "GET /api/Code/latest/c815dc1d-8dda-437f-7d84-08d5745de76a HTTP/1.1\r\n";
+  int code = 500; //if 500 then some error happened. parser has to change this value.
   getter(call);
+  /*
+   * Http response parser. If it screws something up it shouldn't screw up EEPROM values.
+   * If it does, it'll screw up deviceId storage (460-496)
+   * As long as code address exists parser won't write to EEPROM.
+   */
+  parseResponse(actnFrnt, actnBack, &code, false, 460);
+  Serial.println(code);
 }
-void login(){
+void login(){ //working
   char json[] = "{\"Email\":\"admin@admin.org\",\"Password\":\"Fran_97Sokol\",\"RememberMe\":\"false\"}\r\n\r\n";
   char login[] = "POST /api/account HTTP/1.1\r\n";
   poster(login, false, json);
+  parseResponse(minPhrs, minPhrs, (int*) NULL, true, 0); //store token between " and " to EEPROM address 0+.
 }
 
-void completeCode(){
+void completeCode(){ //working
   char call[] = "PUT /api/Code/latest HTTP/1.1\r\n";
   char json[] = "{\"dateTime\":\"2018-02-15 13:36:00\",\"deviceId\":\"c815dc1d-8dda-437f-7d84-08d5745de76a\"}\r\n\r\n";
   poster(call, true, json);
+  printResponse();
 }
 
 //TODO: fix
-/*
-void postEntry(){
+
+void postEntry(){ //working
   char call[] = "POST /api/entry HTTP/1.1\r\n";
-  char json[] = "\"measure\":{\"DateTime\":\"1/10/2018 14:00:00\",\"SoilMoisture\":320,\"SoilDescription\":\"Wet\",\"AirHumidity\":65.0,\"AirTemperature\":22.5,\"LightState\":true},\"deviceId\":\"69093aed-dc43-4e5b-b769-08d5741ccd16\"}\r\n\r\n";
+  char json[] = "{\"measure\":{\"DateTime\":\"2/17/2018 14:00:00\",\"SoilMoisture\":320,\"SoilDescription\":\"Wet\",\"AirHumidity\":65.0,\"AirTemperature\":22.5,\"LightState\":true},\"deviceId\":\"c815dc1d-8dda-437f-7d84-08d5745de76a\"}\r\n\r\n";
   poster(call, true, json);
+  printResponse();
 }
-*/
+
+void printResponse(){
+  char c;
+  while(client.connected()){
+    while(client.available()){
+      c = client.read();
+      Serial.print(c);
+    }
+  }
+  Serial.println(F("disconnecting."));
+  client.stop();
+}
+
+void parseResponse(char *before, char *after, int *action, bool eepromWrite, int eepromIndex){
+  char actStrg[30];
+  bool done = false; //is search currently on
+  bool found = false; //did we find the correct search phrase?
+  byte index = 0; //index of current search within phrase
+  byte searchSize = fragmentLen(before); // size of our phrase
+  char c;
+  int writeIndex = 0; //write head position.
+  while(client.connected()){
+    while(client.available()){
+      c = client.read();
+      if(done){
+        //keep empty.
+      }
+      else if(c == pgm_read_byte_near(before + index) && !found){
+        index++;
+        if(index >= searchSize){
+          found = true;
+          index = 0; // reuse the index for after.
+          searchSize = fragmentLen(after);
+        }
+      }
+      else if(c != pgm_read_byte_near(before + index) && !found){
+        index = 0; //reset the index because it's not what we were looking for.
+      }
+      else if(found){ // DON'T DELETE ELSE BECAUSE FOUND HAS TO START AT THE NEXT CYCLE.
+        if(eepromWrite) {
+          EEPROM.put(eepromIndex + writeIndex, c);
+          }
+        else{
+          actStrg[writeIndex] = c;
+        }
+        writeIndex++;
+        if(c != pgm_read_byte_near(after + index)){
+          index = 0;
+          
+        }
+        else if(c == pgm_read_byte_near(after + index)){
+          index++;
+          if(index >= searchSize){
+            done = 1;
+            if(eepromWrite) {EEPROM.put(eepromIndex + writeIndex - searchSize, '\0');
+            }
+            else actStrg[writeIndex - searchSize] = '\0';
+          }
+        }
+      }
+      Serial.print(c);
+    }
+  }
+
+  Serial.println(F("disconnecting."));
+  client.stop();
+
+  if(eepromWrite) *action = atoi(actStrg);
+  
+  /*
+  EEPROM.get(eepromIndex, c);
+  index = 0;
+  while(c != '\0'){
+    index++;
+    Serial.print(c);
+    EEPROM.get(eepromIndex + index, c);
+  }
+  */
+}
+
 void setup() {
   Serial.begin(9600);  
 
@@ -196,9 +313,10 @@ void setup() {
   printOk();
   delay(6000);
   
-  getMyId();
+  postEntry();
 }
 void loop(){
+  return;
   char c;
   while(client.connected()){
     while(client.available()){
@@ -208,7 +326,7 @@ void loop(){
   }
   Serial.println(F("disconnecting."));
   client.stop();
-  delay(5000);
+  delay(50000);
   getMyId();
   /*
 if(b = client.available()) {
