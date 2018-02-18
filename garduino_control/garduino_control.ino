@@ -1,11 +1,11 @@
 // Date and time functions using a DS3231 RTC connected via I2C and Wire lib
-#include <Wire.h>
+//#include <Wire.h>
 #include "RTClib.h"
 #include "DHT.h"
 #include <SPI.h>
 //#include "SdFat.h"
 #include <stdlib.h>
-#include <IRremote.h>
+//#include <IRremote.h>
 #include <Ethernet.h>
 #include <EEPROM.h>
 #include <avr/pgmspace.h>
@@ -92,11 +92,11 @@ const char entry8[] PROGMEM = {"\"}\r\n"};
 //SdFat sd; // File system object.
 //SdFile file; // Log file.
 
-RTC_DS1307 rtc;
+RTC_DS3231 rtc;
 DHT dht(DHTPIN, DHTTYPE);
 
-IRrecv irrecv(IR_PIN);
-decode_results results;
+//IRrecv irrecv(IR_PIN);
+//decode_results results;
 
 /*
    Because of the unfortunate decision to buy a data logging shield, I cannot use a DS3231 RTC on this project (currently).
@@ -105,10 +105,10 @@ decode_results results;
 */
 
 
-char fileName[13];
+//char fileName[13];
 
 const int measureNumber = 5;
-
+/*
 class Remote {
   private : byte prefix = 0xFF;
 
@@ -222,7 +222,7 @@ class Remote {
     }
   }
 };
-
+*/
 class Measuring {
     public : int soilMoisture;
     public : int light;
@@ -319,7 +319,7 @@ class Control {
                            } sector;
 
   public : Measuring measure = Measuring();
-  public : Remote remote = Remote();
+  //public : Remote remote = Remote();
   private : DateTime now;
   
   private : int readPosition(int posit) {
@@ -711,19 +711,20 @@ public : void autoLight() {
         }
       }
     }
-
+/*
   public : void getRemoteInstructions() {
     byte instr = remote.getInstruction();
     if(instr == remote.getErrorCode()) return;
     mainSwitch(remote.getInstruction());
 }
+*/
   public : void update(){
 
     updateTime();
     
-    remote.readRemote();
-    remote.onTick();
-    getRemoteInstructions();
+    //remote.readRemote();
+    //remote.onTick();
+    //getRemoteInstructions();
 
     autoLight();
     tick();
@@ -745,29 +746,65 @@ public : void autoLight() {
         digitalWrite(rGbControlPin, LOW);
       }
   }
-
+/*
   public : void getRemoteInstructions(DateTime now) {
     byte instr = remote.getInstruction();
     if(instr == remote.getErrorCode()) return;
     mainSwitch(remote.getInstruction());
   }
-
+*/
   public : void logControl(){
     if (now.second() == 0 && (now.hour() % 1 == 0) && now.minute() % 30 == 0) {
-      if (!getWritten()) {
+      setWritten(0);
+    }
+    if(now.second() == 0 && now.minute() % 1 == 0){
+      setCodeFetch(1);
+    }
+    if(now.second() == 0 && now.minute() == 0 && now.hour() == 1){
+      setNetReconf(1);
+    }
+    
+    if(!getWritten()) {
   
         if (getLogging()) logger.logData(now, &measure);
         else Serial.println(F("Didn't write, that's what you wanted, right?"));
   
         setWritten(1);
-      }
-    } else {
-      setWritten(0);
     }
+    if(getCodeFetch()){
+      int code = getCode();
+      mainSwitch(code);
+      if(code != 500) completeCode();
+      setCodeFetch(0);
+    }
+    if(getNetReconf()){
+      byte response = Ethernet.maintain(); // renew DHCP lease
+      switch(response){
+        case 0:
+        Serial.println(F("DHCP renewal: nothing happened"));
+        break;
+        case 1:
+        Serial.println(F("DHCP renewal: failed"));
+        break;
+        case 2:
+        Serial.println(F("DHCP renewal: success"));
+        break;
+        case 3:
+        Serial.println(F("DHCP rebind: failed"));
+        break;
+        case 4:
+        Serial.println(F("DHCP rebind: success"));
+        break;
+      }
+      login(); // renew access token.
+      setNetReconf(0);
+    }
+    
   }
 
   public : Control() {
-    }
+  
+  }
 };
 
 Control sys = Control();
@@ -816,6 +853,7 @@ void Logging::logData(DateTime now, Measuring *measure) {
 
   //getFreeRam();
 
+/*
   Serial.print(now.year());
   Serial.print("/");
   Serial.print(now.month());
@@ -836,7 +874,7 @@ void Logging::logData(DateTime now, Measuring *measure) {
   Serial.print(";");
   Serial.print((*measure).getTemperature());
   Serial.print(";");
-  Serial.println(sys.getLightingState() ? onState : offState);
+  Serial.println(sys.getLightingState() ? onState : offState);*/
 /*
   file.print(now.year());
   file.print("/");
@@ -931,7 +969,7 @@ void setup() {
   Serial.println(F("done."));
 
   Serial.print(F("Initialising IRremote sensor...\t"));
-  irrecv.enableIRIn();
+  //irrecv.enableIRIn();
   Serial.println(F("done."));
 
   delay(1000); // wait for console opening
