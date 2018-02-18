@@ -8,7 +8,7 @@ Combine all of that with my idea for a project that does something in the physic
 
 ## Results
 
-I built a web App (with a public web API in the background) that can talk to any system that is conforming to my "standard", which is defined in this repository, from the code itself to the equipment specs. I built a system that can measure real-life values such as soil moisture, air humidity, air temperature and store that information on microSD card or send it to my web API.
+I built a [web App](https://github.com/ffhan/GarduinoWeb) (with a public web API in the background) that can talk to any system that is conforming to my "standard", which is defined in this repository, from the code itself to the equipment specs. I built a system that can measure real-life values such as soil moisture, air humidity, air temperature and store that information on microSD card or send it to my web API.
 
 ## Capabilities
 
