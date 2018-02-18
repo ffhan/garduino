@@ -56,7 +56,7 @@ const char connection[] PROGMEM = {"Connection: close\r\n"};
 const char deviceId[] PROGMEM = {"c815dc1d-8dda-437f-7d84-08d5745de76a"};
 
 const char actnFrnt[] PROGMEM = {"\"action\":"}; //action front phrase, "action":
-const char actnBack[] PROGMEM = {",\""}; //action back phrase
+const char actnBack[] PROGMEM = {",\"actionName"}; //action back phrase
 const char minPhrs[] PROGMEM = {"\""}; //miminal phrase, only " char.
 
 const char code1[] PROGMEM = {"{\"dateTime\":\""};
@@ -504,9 +504,12 @@ class Control {
       }
     }
 
-  public : void mainSwitch(byte choice) {
+  public : void mainSwitch(int choice) {
       if (getLock()) {
         switch (choice) {
+          case 200:
+          getMyId();
+          return;
           case 500:
           return;
           case 8:
@@ -527,6 +530,9 @@ class Control {
         return;
       }
       switch (choice) {
+        case 200:
+        getMyId();
+        return;
         case 500:
         return;
         /*

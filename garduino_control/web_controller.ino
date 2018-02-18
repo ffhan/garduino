@@ -269,6 +269,18 @@ int fragmentLen(char *fragment){
   return i;
 }
 
+int strLen(char *str){
+  char buff = *(str);
+  int i = 0;
+  int len = 0;
+  while(buff != '\0'){
+    if(buff != ' ') len += 1;
+    i++;
+    buff = *(str + i);
+  }
+  return len;
+}
+
 bool connectToServ(){
   int f = client.connect(server, 80);
   Serial.println(f);
@@ -425,6 +437,7 @@ int getCode(){ //working
    * As long as code address exists parser won't write to EEPROM.
    */
   parseResponse(actnFrnt, actnBack, &code, false, false, 460);
+  Serial.print("I parsed this: ");
   Serial.println(code);
   return code;
 }
@@ -462,7 +475,7 @@ void printResponse(){
 }
 
 void parseResponse(char *before, char *after, int *action, bool eepromWrite, bool writeNewLine, int eepromIndex){
-  char actStrg[30];
+  char actStrg[30] = "";
   bool done = false; //is search currently on
   bool found = false; //did we find the correct search phrase?
   byte index = 0; //index of current search within phrase
@@ -513,11 +526,22 @@ void parseResponse(char *before, char *after, int *action, bool eepromWrite, boo
       Serial.print(c);
     }
   }
-
+  actStrg[29] = '\0';
   Serial.println(F("disconnecting."));
   client.stop();
-
-  if(!eepromWrite) *action = atoi(actStrg);
+  Serial.print("inside parse: ");
+  Serial.println(actStrg);
+  if(!eepromWrite){
+    Serial.println(strLen(actStrg));
+    if(strLen(actStrg) != 0){
+      Serial.println("entered");
+      *action = atoi(actStrg);
+      Serial.println("exited");
+    }
+    else *action = 500;
+  }
+  Serial.print("which atoied to: ");
+  Serial.println(*action);
   
   /*
   EEPROM.get(eepromIndex, c);
