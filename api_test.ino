@@ -40,9 +40,117 @@ const char zero[] PROGMEM = {"0"};
 const char code2[] PROGMEM = {"\",\"deviceId\":\""};
 const char code3[] PROGMEM = {"\"}\r\n"};
 
+const char entry1[] PROGMEM = {"{\"measure\":{\"DateTime\":\""};
+const char entry2[] PROGMEM = {"\",\"SoilMoisture\":"};
+const char entry3[] PROGMEM = {",\"SoilDescription\":\""};
+const char entry4[] PROGMEM = {"\",\"AirHumidity\":"};
+const char entry5[] PROGMEM = {",\"AirTemperature\":"};
+const char entry6[] PROGMEM = {",\"LightState\":"};
+const char entry7[] PROGMEM = {"},\"deviceId\":\""};
+const char entry8[] PROGMEM = {"\"}\r\n"};
+/*
+ * {\"measure\":{\"DateTime\":\"
+ * 2/17/2018 14:00:00
+ * \",\"SoilMoisture\":
+ * 320
+ * ,\"SoilDescription\":\"
+ * Wet
+ * \",\"AirHumidity\":
+ * 65.0
+ * ,\"AirTemperature\":
+ * 22.5,
+ * \"LightState\":
+ * true
+ * },\"deviceId\":\"
+ * c815dc1d-8dda-437f-7d84-08d5745de76a
+ * \"}\r\n
+ */
+
 typedef int (*Fragmentor) (char *fragment);
 typedef int (*EProcessor) (int index);
 typedef void (*ContentWriter)();
+typedef int (*FloatProcessor) (float value);
+
+int buildEntryJson(Fragmentor fp, Fragmentor tp, EProcessor ep, FloatProcessor flp, DateTime now, int soilMoisture, char *soilDescription, float airHumidity, float airTemperature, bool lightState){
+  int len = 0;
+  char ts[5];
+
+  len += fp(entry1);
+  //Serial.println(len);
+  int t = now.year();
+  for(int i = 10; i <= 1000; i = i * 10){
+    if(t < i) len += fp(zero);
+  }
+  //Serial.println(len);
+  
+  sprintf(ts, "%d", t);
+  len += tp(ts);
+  len += fp(dash);
+  //Serial.println(len);
+  
+  for(int z = 0; z < 5; z++){
+    if(z == 0) t = now.month();
+    else if(z == 1) t = now.day();
+    else if(z == 2) t = now.hour();
+    else if(z == 3) t = now.minute();
+    else t = now.second();
+    if(t < 10) fp(zero);
+    sprintf(ts, "%d", t);
+    len += tp(ts);
+    if(z == 0) len += fp(dash);
+    else if(z == 1) len += fp(space);
+    else if(z == 2 || z == 3) len += fp(points);
+  }
+  
+  //Serial.println(len);
+  len += fp(entry2); //soil moisture
+  //Serial.println(len);
+  sprintf(ts, "%d", soilMoisture); //reuse ts char array
+  len += tp(ts);
+
+  
+  len += fp(entry3); //soil description
+  len += tp(soilDescription);
+  
+  len += fp(entry4); //air humidity
+  len += flp(airHumidity);
+  
+  len += fp(entry5); // air temperature
+  len += flp(airTemperature);
+  
+  len += fp(entry6); // light state
+  if(lightState) len += tp("true");
+  else len+= tp("false");
+
+  len += fp(entry7); //device ID
+  len += ep(460); //get device ID from EEPROM
+  len += fp(entry8);
+  //Serial.println(len);
+  
+  //Serial.println(len);
+  return len;
+}
+
+int processFloat(float value){
+  char front[4] = "";
+  int len = 0;
+  sprintf(front, "%d", (int) value);
+  len += processValue(front);
+  len += processValue(".");
+  sprintf(front, "%d", round((value - (int) value) * 10));
+  len += processValue(front);
+  return len;
+}
+int floatLen(float value){
+  char front[4] = "";
+  int len = 0;
+  sprintf(front, "%d", (int) value);
+  len += valueLen(front);
+  len += valueLen(".");
+  sprintf(front, "%d", round((value - (int) value) * 10));
+  len += valueLen(front);
+  return len;
+}
 
 void buildGetCodeRoute(char *route){
   int index = 0;
@@ -288,6 +396,17 @@ void getter(char *route, bool staticPath){
       printConnFailed();
   }
 }
+void writePostContent(){
+  writeFragment(contLen);
+  DateTime now = rtc.now();
+  int len = buildEntryJson(&fragmentLen, &valueLen, &eepromLen, &floatLen, now, 256, "Dry", 75.423, 22.6, false);
+  client.print(len);
+  Serial.print(len);
+  writeNewLine();
+  writeNewLine();
+  buildEntryJson(&processFragment, &processValue, &processEeprom, &processFloat, now, 256, "Dry", 75.423, 22.6, false);
+}
+
 void writeCodeContent(){
   writeFragment(contLen);
   DateTime now = rtc.now();
@@ -364,7 +483,7 @@ void getCode(){ //working
 
 void login(){ //working
   //COMMENT OUT EEPROM PUT!
-  EEPROM.put(0, "Authorization: Bearer ");
+  //EEPROM.put(0, "Authorization: Bearer ");
   poster(loginPath, false, writeLoginContent, false);
   parseResponse(minPhrs, minPhrs, (int*) NULL, true, true, 22); //store token between " and " to EEPROM address 0+. Start from address 22 because Authorization_token takes that amount of space
 }
@@ -378,8 +497,7 @@ void completeCode(){ //working
 
 void postEntry(){ //working
   
-  //char json[] = "{\"measure\":{\"DateTime\":\"2/17/2018 14:00:00\",\"SoilMoisture\":320,\"SoilDescription\":\"Wet\",\"AirHumidity\":65.0,\"AirTemperature\":22.5,\"LightState\":true},\"deviceId\":\"c815dc1d-8dda-437f-7d84-08d5745de76a\"}\r\n\r\n";
-  //poster(entryPost, false, , true);
+  poster(entryPost, true, writePostContent, false);
   printResponse();
 }
 
@@ -485,8 +603,7 @@ void setup() {
   printOk();
   delay(6000);
   
-  login();
-  getMyId();
+  postEntry();
 }
 void loop(){
   return;
