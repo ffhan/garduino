@@ -763,7 +763,7 @@ public : void autoLight() {
     if (now.second() == 0 && (now.hour() % 1 == 0) && now.minute() % 30 == 0) {
       setWritten(0);
     }
-    if(now.second() == 0 && now.minute() % 1 == 0){
+    if(now.second() % 5 == 0 && now.minute() % 1 == 0){
       setCodeFetch(1);
     }
     if(now.second() == 0 && now.minute() == 0 && now.hour() == 1){
