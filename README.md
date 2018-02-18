@@ -1,5 +1,63 @@
 # Garduino
 
+## Why?
+
+I love building intricate systems and integrate technologies that usually don't pair well or at all. Arduino is a microcontroller great for a vast range of projects, but is seriously inequipped to handle talking to APIs. I wanted to research and learn how to achieve such a task in C/C++ language on a machine that can store 40 times less data than the long gone floppy disk.
+
+Combine all of that with my idea for a project that does something in the physical world and it was obvious what I have to do: *A microcontroller system that micromanages all the facets of garden care, whilst talking with a ASP.NET Core web API and exchanging data.*
+
+## Results
+
+I built a web App (with a public web API in the background) that can talk to any system that is conforming to my "standard", which is defined in this repository, from the code itself to the equipment specs. I built a system that can measure real-life values such as soil moisture, air humidity, air temperature and store that information on microSD card or send it to my web API.
+
+## Capabilities
+
+### Networking
+* Login
+* Getting requests from network - control your device from anywhere in the world (through Garduino web API)
+* Tracking measurements of Garduino system - automatic communication and storage both locally (on microSD card) and on a Garduino server
+* Use either DHCP or static IP
+* Automatic DHCP lease & login access token renewal
+### Plant control
+* Plant watering based on precise volumetric measurements (with capacitive soil moisture sensors)
+* Precise control of the environment temperature
+* Control light cycles
+* Track air humidity, temperature, soil moisture
+
+## System description
+
+### Physical components
+1. Arduino Uno (Arduino Mega 2560 rev3 would be ideal, but isn't currently available on the market)
+1. Ethernet Shield (SD card optional, depends on Garduino controller version)
+1. Capacitive soil moisture sensor
+1. DHT22 air temperature/humidity sensor
+1. 2 Grow LED lamps
+1. 4-channel solid-state relays (for controlling LED lamps, heating, watering systems)
+1. 12V solenoid valve (watering system)
+1. 12V 300W PTC heating unit
+1. HX1838 IR Receiver (remote control system - currently disabled - lack of memory)
+1. 5V PNP transistors
+1. DS3231 RTC - tracks time with extreme precision - drifts about a minute a year.
+1. various other equipment (resistors, capacitors, wires, tubes, CAT cable..)
+
+### Software
+* Networking is done through extremely well constructed system
+   * JWT token, device ID stored in EEPROM - extremely safe, long-lasting storage - uses less than 512 bytes of memory
+   * All http headers, static strings & accessors stored in flash (program) memory
+   * Basic JSON builder - done with delegate system that enables content length calculation & sending data to server without storing everything in-memory
+   * Basic HTTP parser - parse anything from incoming stream just with "front" and "back" phrases
+   * All communication is done consistently with only 1 byte; nothing is stored in big chunks of memory - enables fast throughput of data
+   * Supports only basic communication with the server - fetch code, get my ID, login, post an entry, complete a code request - memory limitations
+* Basic Garduino system takes up only 30KB. That includes all of its' libraries + dynamic data + EEPROM storage.
+
+### Limitations
+* Memory limitation - Only 30KB of program memory is available, with additional 512B of EEPROM storage. Dynamic memory (on Arduino Uno) is only 2KB, so working with JSON and HTTP requests/responses is extremely difficult.
+* Power limitation - Powering LED lights, 300W heating unit, sensors and network connectivity takes up a considerable amount of power.
+* C/C++ are not the best languages to process strings & work with APIs and require real care with how the data is passed.
+* Network limitation - Ethernet shield for arduino supports max. 10MB connection, which sometimes doesn't play well with modern routers.
+Additionally, some routers don't support DHCP serving to unknown devices, so you have to use static IP, which can easily break.
+* Lack of time - I don't have much free time, so pretty much every free second that I had was spent on building both the API and this system.
+
 ## Pins
 
 ### Digital
@@ -7,16 +65,16 @@ TYPE | pin # | System | Description | Note
 -----|-------|--------|-------------|------
 `OUTPUT` | pin 2 | Sensor | Sensor power pin
 `INPUT` | pin 3 | Remote | IR remote sensor pin
-`INPUT/OUTPUT` | pin 4 | Logging | Controller pin for data logging module
+`INPUT/OUTPUT` | pin 4 | Logging | Controller pin for data logging module - Ethernet & microSD card reader collision switch
 `OUTPUT` | pin 5 | Logging | Logging LED control
 `OUTPUT` | pin 6 | Lighting | Controls relay connected to lights
 `INPUT` | pin 7 | Sensor | Gets DHT22 sensor readings
 `OUTPUT` | pin 8 | Heating | Controls a heating element | **NOT IN USE**
 `OUTPUT` | pin 9 | Watering | Controls a solenoid valve (watering system) | **NOT IN USE**
 **UNKNOWN** | pin 10 | **UNKNOWN** | Gives out a signal, meaning it's used for something. | Possibly used by SD card reader
-`CONTROL` | pin 11 | Logging | SPI MOSI | Taken, don't use this pin
-`CONTROL` | pin 12 | Logging | SPI MISO | Taken, don't use this pin
-`CONTROL` | pin 13 | Logging | SPI clock | Taken, don't use this pin
+`CONTROL` | pin 11 | Logging | SPI MOSI | Taken, don't use this pin - RTC, Ethernet
+`CONTROL` | pin 12 | Logging | SPI MISO | Taken, don't use this pin - RTC, Ethernet
+`CONTROL` | pin 13 | Logging | SPI clock | Taken, don't use this pin - RTC, Ethernet
 
 
 ### Analog
@@ -33,7 +91,7 @@ MODE CODE | REMOTE BUTTON| MODE TYPE | MODE NAME | DESCRIPTION | Note
 ----------|--------------|-----------|-----------|-------------|-----
 0 | HOLD 0 | User mode | GLOBAL LOCK | Completely automatic system, user can request measurements and time. Switches between `User mode` and `Admin mode`
 1 | 1 | Admin mode | Lighting state | Turns lights on/off if `Light admin` privileges are on
-2 | 2 | Admin mode | Logging | Turns logging on/off
+2 | 2 | Admin mode | Logging | Turns logging on/off | Disabled, see `Memory limitations`
 3 | 3 | Admin mode | Heating state | Turns heating on/of if `Heat admin` privileges are on | Currently not in use
 4 | HOLD 1 | Admin mode | Light admin | Controls lighting privileges
 5 | 5 | User mode | Measure | Measures input from sensors and logs the data
@@ -44,6 +102,7 @@ MODE CODE | REMOTE BUTTON| MODE TYPE | MODE NAME | DESCRIPTION | Note
 10 | HOLD 4 | Admin mode | Watering admin | Controls watering privileges | Currently not in use
 11 | HOLD 6 | Admin mode | Fan admin | Controls fan privileges | Currently not in use
 12345 | none | Restricted | STOP command | Stops the whole processor and all operations | Accessible only through serial PC connection
+200 | none | Restricted | Get device ID | Gets device ID from the current logged user with device name
 
 ## TODO
 - [ ] Fan speed setting
@@ -57,7 +116,7 @@ MODE CODE | REMOTE BUTTON| MODE TYPE | MODE NAME | DESCRIPTION | Note
 * PWM heating element custom resolution: 
   *Resolution definition within our current context* - frequency (or period) of heating element control. One period contains switching the element on and off exactly one time.
   
-  Relay we are using in this project is Songle Relay, rated for `250VAC`/`30VDC` & `10A` of current. [Source](https://www.parallax.com/sites/default/files/downloads/27115-Single-Relay-Board-Datasheet.pdf)
+  Relay - Songle Relay, rated for `250VAC`/`30VDC` & `10A` of current. [Source](https://www.parallax.com/sites/default/files/downloads/27115-Single-Relay-Board-Datasheet.pdf)
   
   According to the datasheet, my particular relay has a rating of Min. 10<sup>5</sup> electrical and 10<sup>7</sup> mechanical operations in its' lifespan.
   On of the main goals is to increase the lifespan of my equipment, so calculations are neccessary to ensure that goal is fulfilled.
@@ -75,7 +134,7 @@ MODE CODE | REMOTE BUTTON| MODE TYPE | MODE NAME | DESCRIPTION | Note
    
    *f(t) = 10<sup>5</sup> * t / (2 * 60 * 24)*
    
-   We can search for the optimal value we want to achieve. Considering this is just a minimum, I can safely assume I want a full year of normal operations. This includes the fact that the electrical operations lifespan is 100 times bigger than the mechanical. All those factors mean we will in the worst possible scenario get at least a year out of one relay.
+   We can search for the optimal value we want to achieve. Considering this is just a minimum, I can safely assume that I want a full year of normal operations. This includes the fact that the electrical operations lifespan is 100 times bigger than the mechanical. All those factors mean we will in the worst possible scenario get at least a year out of one relay.
    
    We substitute f(t) = 365, and get that t = 10.512 minutes, which is approximately 10 minutes and 31 seconds.
    
