@@ -33,12 +33,12 @@ typedef int (*FloatProcessor) (float value);
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 IPAddress ip(192,168,0,1);
-const char *server = "garduino20180215111317.azurewebsites.net";
-//const char server[] PROGMEM = {"garduino20180215111317.azurewebsites.net"};
+const char *server = "garduinoproject.azurewebsites.net";
+//const char server[] PROGMEM = {"garduinoproject.azurewebsites.net"};
 
 //const char token[] PROGMEM = {"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhZG1pbi5vcmciLCJqdGkiOiI1Mzk1ZDZlMS02MmMwLTRmNjMtYmMzOS1jOTEyZWFkMDhhYmIiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImI4M2VmZDU0LTVlN2ItNDIwMy04NTNjLWRjODk2MTczNTkxZSIsImV4cCI6MTUxOTAzNjY3NiwiaXNzIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NDQzOTUiLCJhdWQiOiJodHRwczovL2xvY2FsaG9zdDo0NDM5NSJ9.6MeaXtkiLi-qNvSYHSO9JMvbvo7FwpB8_9_pf9D4fFI\r\n"};
 const char tokenHead[] PROGMEM = {"Authorization: Bearer "};
-const char host[] PROGMEM = {"Host: garduino20180215111317.azurewebsites.net\r\n"};
+const char host[] PROGMEM = {"Host: garduinoproject.azurewebsites.net\r\n"};
 const char codeCall[] PROGMEM = {"PUT /api/Code/latest HTTP/1.1\r\n"};
 const char loginPath[] PROGMEM = {"POST /api/account HTTP/1.1\r\n"};
 const char codeGetFrnt[] PROGMEM = {"GET /api/Code/latest/"};
@@ -46,7 +46,13 @@ const char codeGetBack[] PROGMEM = {" HTTP/1.1\r\n"};
 const char nameCall[] PROGMEM = {"GET /api/Device/call/Garduino HTTP/1.1\r\n"};
 const char entryPost[] PROGMEM = {"POST /api/entry HTTP/1.1\r\n"};
 
-const char loginJson[] PROGMEM = {"{\"Email\":\"admin@admin.org\",\"Password\":\"Fran_97Sokol\",\"RememberMe\":\"false\"}\r\n"};
+const char updateFrnt[] PROGMEM = {"PUT /api/Device/"};
+const char updateBack[] PROGMEM = {"/status HTTP/1.1\r\n"};
+
+const char updateJson[] PROGMEM = {"{\"State\":"};
+const char updateJson2[] PROGMEM = {"}\r\n"};
+
+const char loginJson[] PROGMEM = {"{\"Email\":\"admin@admin.org\",\"Password\":\"Admin_projekt0\",\"RememberMe\":\"false\"}\r\n"};
 
 const char contType[] PROGMEM = {"Content-Type: application/json\r\n"};
 const char cacheCtrl[] PROGMEM = {"Cache-Control: no-cache\r\n"};
@@ -344,6 +350,12 @@ class Control {
       }
     }
 
+  public : int getRawData(){
+    int t; 
+    t = _data;
+    return t;
+  }
+    
   private : void setPosition(int posit) {
       int tmp = 1 << posit;
       _data |= tmp;
@@ -507,9 +519,6 @@ class Control {
   public : void mainSwitch(int choice) {
       if (getLock()) {
         switch (choice) {
-          case 200:
-          getMyId();
-          return;
           case 500:
           return;
           case 8:
@@ -533,6 +542,8 @@ class Control {
         case 200:
         getMyId();
         return;
+        case 420:
+        renewNetwork(true);
         case 500:
         return;
         /*
@@ -752,39 +763,8 @@ public : void autoLight() {
         digitalWrite(rGbControlPin, LOW);
       }
   }
-/*
-  public : void getRemoteInstructions(DateTime now) {
-    byte instr = remote.getInstruction();
-    if(instr == remote.getErrorCode()) return;
-    mainSwitch(remote.getInstruction());
-  }
-*/
-  public : void logControl(){
-    if (now.second() == 0 && (now.hour() % 1 == 0) && now.minute() % 30 == 0) {
-      setWritten(0);
-    }
-    if(now.second() % 5 == 0 && now.minute() % 1 == 0){
-      setCodeFetch(1);
-    }
-    if(now.second() == 0 && now.minute() == 0 && now.hour() == 1){
-      setNetReconf(1);
-    }
-    
-    if(!getWritten()) {
-  
-        if (getLogging()) logger.logData(now, &measure);
-        else Serial.println(F("Didn't write, that's what you wanted, right?"));
-  
-        setWritten(1);
-    }
-    if(getCodeFetch()){
-      int code = getCode();
-      mainSwitch(code);
-      if(code != 500) completeCode();
-      setCodeFetch(0);
-    }
-    if(getNetReconf()){
-      byte response = Ethernet.maintain(); // renew DHCP lease
+  public : void renewNetwork(bool rewriteDevice){
+    byte response = Ethernet.maintain(); // renew DHCP lease
       switch(response){
         case 0:
         Serial.println(F("DHCP renewal: nothing happened"));
@@ -803,7 +783,45 @@ public : void autoLight() {
         break;
       }
       login(); // renew access token.
+      if(rewriteDevice) getMyId();
       setNetReconf(0);
+  }
+/*
+  public : void getRemoteInstructions(DateTime now) {
+    byte instr = remote.getInstruction();
+    if(instr == remote.getErrorCode()) return;
+    mainSwitch(remote.getInstruction());
+  }
+*/
+  public : void logControl(){
+    if (now.second() == 0 && (now.hour() % 1 == 0) && now.minute() % 30 == 0) {
+      setWritten(0);
+    }
+    if(now.second() % 30 == 0 && now.minute() % 1 == 0){
+      setCodeFetch(1);
+    }
+    if(now.second() == 0 && now.minute() == 0 && now.hour() == 1){
+      setNetReconf(1);
+    }
+    
+    if(!getWritten()) {
+  
+        if (getLogging()) logger.logData(now, &measure);
+        else Serial.println(F("Didn't write, that's what you wanted, right?"));
+  
+        setWritten(1);
+    }
+    
+    if(getCodeFetch()){
+      updateState();
+      int code = getCode();
+      mainSwitch(code);
+      if(code != 500) completeCode();
+      setCodeFetch(0);
+    }
+    
+    if(getNetReconf()){
+      renewNetwork(false);
     }
     
   }
