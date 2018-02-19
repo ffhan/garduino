@@ -794,10 +794,10 @@ public : void autoLight() {
   }
 */
   public : void logControl(){
-    if (now.second() == 0 && (now.hour() % 1 == 0) && now.minute() % 30 == 0) {
+    if (now.second() == 0 && (now.hour() % 1 == 0) && ((now.minute() % 30 == 0) || now.minute() == 0)) {
       setWritten(0);
     }
-    if(now.second() % 30 == 0 && now.minute() % 1 == 0){
+    if(now.second() == 30 && now.minute() % 1 == 0){
       setCodeFetch(1);
     }
     if(now.second() == 0 && now.minute() == 0 && now.hour() == 1){
@@ -813,11 +813,11 @@ public : void autoLight() {
     }
     
     if(getCodeFetch()){
-      updateState();
       int code = getCode();
       mainSwitch(code);
       if(code != 500) completeCode();
       setCodeFetch(0);
+      updateState();
     }
     
     if(getNetReconf()){

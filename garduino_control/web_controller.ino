@@ -220,6 +220,7 @@ int _eeprom(int index, bool doWrite) {
       client.print(buff);
       Serial.print(buff);
     }
+    if(!((buff >= 65 && buff <= 90) || (buff >= 97 && buff <= 122) || buff == '-' || (buff >= 48 && buff <= 57))) Serial.print("WARNING");
     EEPROM.get(index, buff);
   }
   return index;
