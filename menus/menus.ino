@@ -162,6 +162,10 @@ class ItemList{
     return;
   }
   Item *get(int index){
+    if(len == 0){
+      Serial.println("empty.");
+      return NULL;
+    }
     ItemNode *head = this->head;
     Item *item = NULL;
     int i = 0;
@@ -246,7 +250,7 @@ class Screen{
   typedef enum{
     POINT = 62
   } symbols;
-  
+
   Screen(byte rows, byte cols, Menu *mainMenu){
     this->rows = rows;
     this->cols = cols;
@@ -284,32 +288,34 @@ class Screen{
   }
 };
 
+Screen *screen = (Screen*) malloc(sizeof(Screen));
+Menu mainMenu = Menu("My main menu");
+  
+Menu firstMenu = Menu("My first menu");
+Menu secondMenu = Menu("Test holding menu");
+
+Item firstItem = Item("My first item");
+Item secondItem = Item("Test item");
+Menu randomMenu = Menu("Testing interoperability");
+Item thirdItem = Item("Third item");
+
+Item fourthItem = Item("fourth");
+Menu random2Menu = Menu("Final menu");
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
 
-  Menu mainMenu = Menu("My main menu");
   
-  Menu firstMenu = Menu("My first menu");
-  Menu secondMenu = Menu("Test holding menu");
-  
-  Item firstItem = Item("My first item");
-  Item secondItem = Item("Test item");
-  Menu randomMenu = Menu("Testing interoperability");
-  Item thirdItem = Item("Third item");
-  
-  Item fourthItem = Item("fourth");
-  Menu random2Menu = Menu("Final menu");
 
   mainMenu.addItems(&firstMenu, &secondMenu);
   secondMenu.addItems(&firstItem, &secondItem, &randomMenu, &thirdItem);
   randomMenu.addItems(&fourthItem, &random2Menu);
 
-  Screen screen = Screen(16, 2, &mainMenu);
+  *screen = Screen(16, 2, &mainMenu);
   
   //mainMenu.processChildItem(1, &printItem);
   //printItem(mainMenu.getSubMenuItem(1));
-  screen.flash(&printItem);
+  //screen.flash(&printItem);
   //mainMenu.processChildItems(&printItem);
   //secondMenu.processChildItems(&printItem);
   //randomMenu.processChildItems(&printItem);
@@ -317,5 +323,26 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-
+  bool typed = false;
+  while(Serial.available() > 0){
+    int choice = Serial.parseInt();
+    if(!typed){
+      Serial.println(choice);
+      switch(choice){
+        case 0:
+        screen->up();
+        break;
+        case 1:
+        screen->down();
+        break;
+        case 2: 
+        screen->enter();
+        break;
+        case 3:
+        screen->back();
+      }
+    screen->flash(&printItem);
+    typed = true;
+    }
+  }
 }
