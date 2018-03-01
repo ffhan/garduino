@@ -13,68 +13,69 @@ typedef enum {
  */
 class Item{
 
-  public : itemType type;
+  public : 
+  itemType type;
+  
   private :
 
-  
+  byte index;
   char *title;
-  
-  byte selection = 0;
 
-  Item *parent;
+  Item *parent = NULL;
   bool hasParent = false;
   
-  Item *before;
+  Item *before = NULL;
   bool top = false;
   
-  Item *after;
+  Item *after = NULL;
   bool bottom = false;
   
-  public : Item(char *title){
+  public : 
+  Item(char *title){
     this->title = title;
     type = ITEM;
   }
-  public : char *getTitle(){
+  char *getTitle(){
     return title;
   }
-  public : itemType getType(){
+  itemType getType(){
     return type;
   }
-  public : void setBefore(Item *before){
+  void setBefore(Item *before){
     this->before = before;
     top = true;
   }
-  public : Item *getBefore(){
+  Item *getBefore(){
     return before;
   }
-  public : void setAfter(Item *after){
+  void setAfter(Item *after){
     this->after = after;
     bottom = true;
   }
-  public : Item *getAfter(){
+  Item *getAfter(){
     return after;
   }
-  public : void setParent(Item *parent){
+  void setParent(Item *parent){
     this->parent = parent;
     hasParent = true;
   }
-  public : Item *getParent(){
+  Item *getParent(){
     return parent;
   }
-  public : Item *up(){
+  Item *up(){
     if(top) return before;
     return this;
   }
-  public : Item *down(){
+  Item *down(){
     if(bottom) return after;
     return this;
   }
-  public : Item *back(){
+  Item *back(){
     if(hasParent) return parent;
     return this;
   }
 
-  public : char *getStringType(){
+  char *getStringType(){
     switch(type){
       case ITEM:
       return "Item";
@@ -83,6 +84,12 @@ class Item{
       case MENU:
       return "Menu";
     }
+  }
+  public : byte getIndex(){
+    return index;
+  }
+  byte setIndex(byte index){
+    this->index = index;
   }
 };
 
@@ -97,6 +104,9 @@ void printItem(Item *item){
   }
   if(item->getAfter()){
     Serial.print(F("Item after: ")); Serial.println((item->getAfter())->getTitle());
+  }
+  if(item->getParent()){
+    Serial.print(F("Parent: ")); Serial.println((item->getParent())->getTitle());
   }
   Serial.print(F("Item type: ")); Serial.println(item->getStringType());
 }
@@ -126,18 +136,19 @@ class ItemList{
   void add(Item *item){
     ItemNode *node = new ItemNode();
     node->item = item;
+    node->item->setIndex(len);
 
     //printItem(node->item);
+    
+    item->setParent(parent);
 
     if(head == NULL){
       head = node;
       tail = head;
       len++;
-      printItem(node->item);
+      //printItem(node->item);
       return;
     }
-
-    item->setParent(parent);
 
     node->previous = tail;
     
@@ -147,7 +158,7 @@ class ItemList{
     tail->next = node;
     tail = node;
     len++;
-    printItem(node->item);
+    //printItem(node->item);
     return;
   }
   Item *get(int index){
@@ -155,25 +166,23 @@ class ItemList{
     Item *item = NULL;
     int i = 0;
     while(head && i <= index){
-      head = head->next;
       item = head->item;
+      head = head->next;
       i++;
     }
-    return item;
+    if(item) return item;
+    else{
+      Serial.println(F("failed."));
+      return;
+    }
   }
   void process(int index, Printer func){
-    ItemNode *head = this->head;
-    Item *item = NULL;
-    int i = 0;
-    while(head && i <= index){
-      head = head->next;
-      item = head->item;
-      i++;
-    }
-    func(item);
+    Item *item = get(index);
+    if(item) func(item);
+    else Serial.println(F("failed."));
   }
   void processAll(Printer func){
-    Serial.println("--------START--------");
+    Serial.println(F("--------START--------"));
     ItemNode *head = this->head;
     Item *item = head->item;
     int i = 0;
@@ -182,7 +191,7 @@ class ItemList{
       head = head->next;
       item = head->item;
     }
-    Serial.println("-------END--------");
+    Serial.println(F("-------END--------"));
   }
 };
 class Menu : Item{
@@ -192,43 +201,118 @@ class Menu : Item{
   //contains all items that are shown when this menu is clicked. 
   ItemList childItems = ItemList(this); 
   
-  public : Menu(char *title) : Item(title){
+  public: 
+  Menu(char *title) : Item(title){
     type = MENU;
   }
-  public : void addItem(Item *item){
+  void addItem(Item *item){
     childItems.add(item);
   }
-  public : void addItems(){}
+  void addItems(){}
   template <typename Item, typename ... Items>
   void addItems(Item item, Items ... rest){
     addItem((Item) item);
     addItems(rest...);
   }
-  public : Item *enter(){
-    return childItems.get(0);
+  Item *enter(){
+    Item *temp = childItems.get(0);
+    if(temp) return temp;
+    return this;
   }
-  public : void processChildItems(Printer func){
+  void processChildItem(int index, Printer func){
+    childItems.process(index, func);
+  }
+  void processChildItems(Printer func){
     childItems.processAll(func);
+  }
+  Item *getSubMenuItem(int index){
+    return childItems.get(index);
   }
 };
 
-Menu mainMenu = Menu("My main menu");
+class Screen{
+  
+  private : 
 
-Menu firstMenu = Menu("My first menu");
-Menu secondMenu = Menu("Test holding menu");
+  
+  byte rows, cols;
+  Menu *mainMenu;
+  Item *currentItem;
 
-Item firstItem = Item("My first item");
-Item secondItem = Item("Test item");
-Item thirdItem = Item("Third item");
+  byte cursorPosition = 0, index = 0;
+
+  public : 
+  
+  typedef enum{
+    POINT = 62
+  } symbols;
+  
+  Screen(byte rows, byte cols, Menu *mainMenu){
+    this->rows = rows;
+    this->cols = cols;
+    this->mainMenu = mainMenu;
+    currentItem = mainMenu->getSubMenuItem(0);
+  }
+  
+  void up(){
+    if(currentItem == currentItem->up()) return;
+    index--;
+    if(cursorPosition - 1 >= 0) cursorPosition--; 
+    currentItem = currentItem->up();
+  }
+  void down(){
+    if(currentItem == currentItem->down()) return;
+    index++;
+    if(cursorPosition + 1 < rows) cursorPosition++;
+    currentItem = currentItem->down();
+  }
+  void back(){
+    if(currentItem == currentItem->back()) return;
+    currentItem = currentItem->back();
+    index = currentItem->getIndex();
+  }
+  void enter(){
+    if(currentItem->getType() != MENU) return; //expand later.
+    //if it's a menu
+    Menu *menu = (Menu*) currentItem;
+    if(currentItem == menu->enter()) return;
+    currentItem = menu->enter();
+    index = currentItem->getIndex();
+  }
+  void flash(Printer func){
+    func(currentItem);
+  }
+};
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  mainMenu.addItems(&firstMenu, &secondMenu);
-  secondMenu.addItems(&firstItem, &secondItem, &thirdItem);
 
-  mainMenu.processChildItems(&printItem);
-  secondMenu.processChildItems(&printItem);
+  Menu mainMenu = Menu("My main menu");
+  
+  Menu firstMenu = Menu("My first menu");
+  Menu secondMenu = Menu("Test holding menu");
+  
+  Item firstItem = Item("My first item");
+  Item secondItem = Item("Test item");
+  Menu randomMenu = Menu("Testing interoperability");
+  Item thirdItem = Item("Third item");
+  
+  Item fourthItem = Item("fourth");
+  Menu random2Menu = Menu("Final menu");
+
+  mainMenu.addItems(&firstMenu, &secondMenu);
+  secondMenu.addItems(&firstItem, &secondItem, &randomMenu, &thirdItem);
+  randomMenu.addItems(&fourthItem, &random2Menu);
+
+  Screen screen = Screen(16, 2, &mainMenu);
+  
+  //mainMenu.processChildItem(1, &printItem);
+  //printItem(mainMenu.getSubMenuItem(1));
+  screen.flash(&printItem);
+  //mainMenu.processChildItems(&printItem);
+  //secondMenu.processChildItems(&printItem);
+  //randomMenu.processChildItems(&printItem);
 }
 
 void loop() {
