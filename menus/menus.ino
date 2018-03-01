@@ -1,4 +1,3 @@
-
 template<size_t SIZE, class T> inline size_t array_size(T (&arr)[SIZE]) {
     return SIZE;
 }
@@ -96,20 +95,6 @@ class Item{
 typedef void (*Printer) (Item *item);
 
 
-void printItem(Item *item){
-  Serial.println(F("-------------------"));
-  Serial.print(F("Item title: ")); Serial.println(item->getTitle());
-  if(item->getBefore()){
-    Serial.print(F("Item before: ")); Serial.println((item->getBefore())->getTitle());
-  }
-  if(item->getAfter()){
-    Serial.print(F("Item after: ")); Serial.println((item->getAfter())->getTitle());
-  }
-  if(item->getParent()){
-    Serial.print(F("Parent: ")); Serial.println((item->getParent())->getTitle());
-  }
-  Serial.print(F("Item type: ")); Serial.println(item->getStringType());
-}
 
 
 class ItemNode{
@@ -118,6 +103,12 @@ class ItemNode{
   ItemNode *next = NULL;
   Item *item;
 };
+/*
+ * a better name would be SubMenu, but I didn't want to draw a too close relationship to
+ * Menu, because this holds all Item objects and does not behave like a menu; it's a helper
+ * class.
+ */
+
 class ItemList{
   public:
   int len = 0;
@@ -186,9 +177,9 @@ class ItemList{
     else Serial.println(F("failed."));
   }
   void processAll(Printer func){
-    Serial.println(F("--------START--------"));
     ItemNode *head = this->head;
     Item *item = head->item;
+    Serial.print(F("---"));Serial.print(item->getParent()->getTitle());Serial.println(F("---"));
     int i = 0;
     while(head){
       func(item);
@@ -198,12 +189,14 @@ class ItemList{
     Serial.println(F("-------END--------"));
   }
 };
-class Menu : Item{
+class Menu : public Item{
 
   private :
 
   //contains all items that are shown when this menu is clicked. 
   ItemList childItems = ItemList(this); 
+
+  byte selector = 0;
   
   public: 
   Menu(char *title) : Item(title){
@@ -232,18 +225,50 @@ class Menu : Item{
   Item *getSubMenuItem(int index){
     return childItems.get(index);
   }
+
+  byte *getSelector(){
+    return &selector;
+  }
+  //not really needed since I exposed selector directly, but it's less verbose.
+  byte getSelectorValue(){ 
+    return selector;
+  }
 };
+
+void printItem(Item *item){
+  Serial.println(F("-------------------"));
+  Serial.print(F("Item title: ")); Serial.println(item->getTitle());
+  if(item->getBefore()){
+    Serial.print(F("Item before: ")); Serial.println((item->getBefore())->getTitle());
+  }
+  if(item->getAfter()){
+    Serial.print(F("Item after: ")); Serial.println((item->getAfter())->getTitle());
+  }
+  if(item->getParent()){
+    Serial.print(F("Parent: ")); Serial.println((item->getParent())->getTitle());
+  }
+  Serial.print(F("Item type: ")); Serial.println(item->getStringType());
+  if(item->getType() == MENU){
+    Serial.print(F("Selector: ")); Serial.print(" "); Serial.println(((Menu*)item)->getSelectorValue());
+  }
+}
+
 
 class Screen{
   
   private : 
-
+  
   
   byte rows, cols;
   Menu *mainMenu;
   Item *currentItem;
 
-  byte cursorPosition = 0, index = 0;
+  /*
+   * cursorPosition is the position on the screen. It's dictated by the screen size.
+   * index determines the position inside a subMenu.
+   * 
+  */
+  byte *cursorPosition, index = 0, mainPosition = 0;
 
   public : 
   
@@ -254,24 +279,38 @@ class Screen{
   Screen(byte rows, byte cols, Menu *mainMenu){
     this->rows = rows;
     this->cols = cols;
-    this->mainMenu = mainMenu;
-    currentItem = mainMenu->getSubMenuItem(0);
+    bindToMenu(mainMenu);
+  }
+
+  //use only for constructor.
+  void bindToMenu(Menu *menu){
+    this->mainMenu = menu;
+    cursorPosition = menu->getSelector();
+    currentItem = mainMenu->enter();
   }
   
   void up(){
     if(currentItem == currentItem->up()) return;
     index--;
-    if(cursorPosition - 1 >= 0) cursorPosition--; 
+    if(*cursorPosition - 1 >= 0) (*cursorPosition)--;
     currentItem = currentItem->up();
   }
   void down(){
     if(currentItem == currentItem->down()) return;
     index++;
-    if(cursorPosition + 1 < rows) cursorPosition++;
+    if(*cursorPosition + 1 < rows) (*cursorPosition)++;
     currentItem = currentItem->down();
   }
   void back(){
     if(currentItem == currentItem->back()) return;
+    Menu *menu = mainMenu->back();
+    //Serial.print(mainMenu->getTitle());Serial.print(" ");
+    if(mainMenu != menu){
+      mainMenu = menu;
+      cursorPosition = mainMenu->getSelector();
+    }
+    else cursorPosition = &mainPosition; // bind it to a default value 0.
+    //Serial.println(mainMenu->getTitle());
     currentItem = currentItem->back();
     index = currentItem->getIndex();
   }
@@ -279,11 +318,17 @@ class Screen{
     if(currentItem->getType() != MENU) return; //expand later.
     //if it's a menu
     Menu *menu = (Menu*) currentItem;
+    
     if(currentItem == menu->enter()) return;
-    currentItem = menu->enter();
+    mainMenu = menu;
+    cursorPosition = mainMenu->getSelector();
+    //*cursorPosition = 0; // reset the cursor position, because we do the same 
+    //for the index.
+    currentItem = mainMenu->enter();
     index = currentItem->getIndex();
   }
   void flash(Printer func){
+    Serial.print(*cursorPosition); Serial.print(" "); Serial.println(index);
     func(currentItem);
   }
 };
@@ -301,6 +346,7 @@ Item thirdItem = Item("Third item");
 
 Item fourthItem = Item("fourth");
 Menu random2Menu = Menu("Final menu");
+Menu rand3Menu = Menu("just a test");
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -309,7 +355,7 @@ void setup() {
 
   mainMenu.addItems(&firstMenu, &secondMenu);
   secondMenu.addItems(&firstItem, &secondItem, &randomMenu, &thirdItem);
-  randomMenu.addItems(&fourthItem, &random2Menu);
+  randomMenu.addItems(&fourthItem, &random2Menu, &rand3Menu);
 
   *screen = Screen(16, 2, &mainMenu);
   
@@ -340,6 +386,12 @@ void loop() {
         break;
         case 3:
         screen->back();
+        break;
+        case 4:
+        mainMenu.processChildItems(&printItem);
+        secondMenu.processChildItems(&printItem);
+        randomMenu.processChildItems(&printItem);
+        break;
       }
     screen->flash(&printItem);
     typed = true;
