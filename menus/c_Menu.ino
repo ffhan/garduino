@@ -23,7 +23,7 @@ class Menu : public Item{
   Item *enter(){
     Item *temp = childItems.get(0);
     if(temp) return temp;
-    return this;
+    Item::enter();
   }
   void processChildItem(int index, Printer func){
     childItems.process(index, func);

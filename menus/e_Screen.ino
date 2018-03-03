@@ -42,7 +42,7 @@ class Screen{
     currentItem = currentItem->up();
   }
   void down(){
-    if(currentItem == currentItem->down()){
+    if(!currentItem->down()){
       return;
     }
     index++;
@@ -50,7 +50,7 @@ class Screen{
     currentItem = currentItem->down();
   }
   void back(){
-    if(currentItem == currentItem->back()) return;
+    if(!currentItem->back()) return;
     Menu *menu = mainMenu->back();
     //Serial.print(mainMenu->getTitle());Serial.print(" ");
     if(mainMenu != menu && menu){
@@ -64,26 +64,12 @@ class Screen{
   }
   void enter(){
     if(currentItem->isSetting()) {
-      switch(currentItem->getType()){
-        case BOOLSETTING:{
-          BoolSetting *setting = (BoolSetting *) currentItem;
-          setting->enter();
-          break;
-        }
-  
-        case INTSETTING:{
-          IntSetting *setting = (IntSetting *) currentItem;
-          setting->enter();
-          break;
-        }
-      }
+      currentItem->enter();
     }
-    if(currentItem->getType() != MENU) return; //expand later.
-    //if it's a menu
-    Menu *menu = (Menu*) currentItem;
+    if(currentItem->getType() != MENU) return;
+    if(!currentItem->enter()) return;
     
-    if(currentItem == menu->enter()) return;
-    mainMenu = menu;
+    mainMenu = (Menu *) currentItem;
     cursorPosition = mainMenu->getSelector();
     *cursorPosition = 0; // reset the cursor position, because we do the same for the index.
     currentItem = mainMenu->enter();
@@ -91,7 +77,6 @@ class Screen{
   }
   
   void left(){
-    Serial.println(currentItem->getTitle());
     currentItem->left();
   }
   void right(){
@@ -158,7 +143,11 @@ class Screen{
           case MENU:
           Serial.print(menuSign);
           break;
-          
+          case SETTING:
+          for(int j = 0; j < 3; j++){
+            Serial.print(space);
+          }
+          break;
           case BOOLSETTING:{
            BoolSetting *setting = (BoolSetting *) item;
             if(setting->isSaved()) Serial.print(space);

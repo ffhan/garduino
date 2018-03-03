@@ -2,7 +2,7 @@ template<size_t SIZE, class T> inline size_t array_size(T (&arr)[SIZE]) {
     return SIZE;
 }
 typedef enum {
-    ITEM = 0, BOOLSETTING = 1, INTSETTING = 2, MENU = 3
+    ITEM = 0, SETTING = 1, BOOLSETTING = 2, INTSETTING = 3, MENU = 4
 } itemType;
 
 
@@ -12,7 +12,7 @@ typedef enum {
  */
 class Item{
 
-  public : 
+  protected : 
   itemType type;
   
   private :
@@ -67,14 +67,14 @@ class Item{
   }
   Item *down(){
     if(bottom) return after;
-    return this;
+    return NULL;
   }
   Item *back(){
     if(hasParent) return parent;
-    return this;
+    return NULL;
   }
   virtual Item *enter(){
-    return this;
+    return NULL;
   }
   virtual void left(){
     return;
@@ -87,7 +87,7 @@ class Item{
     return (type == MENU);
   }
   bool isSetting(){
-    return (type == BOOLSETTING || type == INTSETTING);
+    return (type == BOOLSETTING || type == INTSETTING || type == SETTING);
   }
 
   char *getStringType(){
@@ -98,6 +98,8 @@ class Item{
       return "Boolean setting";
       case INTSETTING:
       return "Integer setting";
+      case SETTING:
+      return "Basic setting";
       case MENU:
       return "Menu";
     }
