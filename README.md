@@ -24,10 +24,28 @@ I built a [web App](https://github.com/ffhan/GarduinoWeb) (with a public web API
 * Control light cycles
 * Track air humidity, temperature, soil moisture
 
+### Software components
+1. Garduino main - main Garduino system
+   1. Control - the heart of Garduino; controls all other subsystems.
+   1. Measuring (name change due) - works with measurement values and measurement implementation
+   1. Logging (name change due) - manages Logging subsystem; used to mainly control SD card writing/reading but since its' deprecation represents mostly legacy code until further updates.
+   1. Remote - manages remote control
+1. Web controller - system that talks to the [web API](http://garduinoproject.azurewebsites.net/)
+1. Garduino menus - system that enables easy and efficient creation & use of Garduino GUI classes
+   1. Item - base class; defines basic rules for how all objects in *menu system* will behave. Its' direct purpose is separator/simple title
+   1. Menu - Item that holds other items. Pressing enter on its' selection opens up its' sub-menu.
+      1. ItemNode - base class used in ItemList
+	  1. ItemList - doubly linked list that adds any Item to its' tail, while binding elements together. A backbone of an easy to use Menu system.
+   1. Setting (Trigger setting) - Item that calls up its' registered Event (a member function).
+   1. ValueSetting - Expanded setting that can hold any value and change it. It is an abstract class, since it doesn't know how to increase or decrease the value it holds.
+   1. BoolSetting - A ValueSetting that contains a boolean variable.
+   1. IntSetting - A ValueSetting that contains an integer variable in range 0-9 (both including).
+   1. Dummy - a temporary class that serves as an example of how to bind an Event with Settings and its' values with ValueSettings.
+   
 ## System description
 
 ### Physical components
-1. Arduino Uno (Arduino Mega 2560 rev3 would be ideal, but isn't currently available on the market)
+1. Arduino Uno/Mega (additional work is going to be needed to support both. Currently I am focusing exclusively on Arduino Mega support.)
 1. Ethernet Shield (SD card optional, depends on Garduino controller version)
 1. Capacitive soil moisture sensor
 1. DHT22 air temperature/humidity sensor
@@ -49,9 +67,10 @@ I built a [web App](https://github.com/ffhan/GarduinoWeb) (with a public web API
    * All communication is done consistently with only 1 byte; nothing is stored in big chunks of memory - enables fast throughput of data
    * Supports only basic communication with the server - fetch code, get my ID, login, post an entry, complete a code request - memory limitations
 * Basic Garduino system takes up only 30KB. That includes all of its' libraries + dynamic data + EEPROM storage.
+* Intuitive, simple & powerful *Menu system* enabling user control through GUI.
 
 ### Limitations
-* Memory limitation - Only 30KB of program memory is available, with additional 512B of EEPROM storage. Dynamic memory (on Arduino Uno) is only 2KB, so working with JSON and HTTP requests/responses is extremely difficult.
+* Memory limitation - Only 30KB of program memory is available on Arduino Uno, with additional 512B of EEPROM storage. Dynamic memory (on Arduino Uno) is only 2KB, so working with JSON and HTTP requests/responses is extremely difficult.
 * Power limitation - Powering LED lights, 300W heating unit, sensors and network connectivity takes up a considerable amount of power.
 * C/C++ are not the best languages to process strings & work with APIs and require real care with how the data is passed.
 * Network limitation - Ethernet shield for arduino supports max. 10MB connection, which sometimes doesn't play well with modern routers.
@@ -105,6 +124,7 @@ MODE CODE | REMOTE BUTTON| MODE TYPE | MODE NAME | DESCRIPTION | Note
 200 | none | Restricted | Get device ID | Gets device ID from the current logged user with device name
 
 ## TODO
+- [ ] *Garduino main* and *Menu* subsystem merge
 - [ ] Fan speed setting
 - [ ] Heating system
 - [ ] Watering system
