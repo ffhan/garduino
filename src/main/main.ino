@@ -13,6 +13,14 @@
 #include "WebController.h"
 #include "pins.h"
 #include "Logging.h"
+#include "Item.h"
+#include "ItemNode.h"
+#include "Menu.h"
+#include "Setting.h"
+#include "BoolSetting.h"
+#include "IntSetting.h"
+#include "Screen.h"
+
 
 /*
   const int lightControlPin = 6;
@@ -30,12 +38,12 @@
 //SdFat sd; // File system object.
 //SdFile file; // Log file.
 /*
-IRrecv irrecv(IR_PIN);
-decode_results results;
+  IRrecv irrecv(IR_PIN);
+  decode_results results;
 
-RTC_DS3231 rtc;
+  RTC_DS3231 rtc;
 
-DHT dht(DHTPIN, DHTTYPE);
+  DHT dht(DHTPIN, DHTTYPE);
 */
 
 //char fileName[13];
@@ -56,6 +64,7 @@ int getFreeRam()
 }
 
 Control *sys;
+Screen *screen = (Screen*) malloc(sizeof(Screen));
 
 double getDecimalTime(DateTime now) {
   return (double)now.hour() + ((double)now.minute()) / ((double)60.0) + ((double)now.second()) / ((double)3600.0);
@@ -65,17 +74,47 @@ void setup() {
   // put your setup code here, to run once:
 
   Serial.begin(9600);
-/*
-  logger.initSD();
-  Serial.println(F("Initialising SD card reader done."));
+  /*
+    logger.initSD();
+    Serial.println(F("Initialising SD card reader done."));
   */
   /*// Wait for USB Serial
     while (!Serial && millis() < 4000) {
     SysCall::yield();
     }*/
 
-  pinMode(4,OUTPUT);
-  digitalWrite(4,HIGH);
+  pinMode(4, OUTPUT);
+  digitalWrite(4, HIGH);
+
+  Dummy *dummy = new Dummy(false, true, 6);
+
+  Menu *mainMenu = new Menu("My main menu");
+
+  Menu *firstMenu = new Menu("My first menu");
+  Setting *nSetting = new Setting("Trigger", dummy, &Dummy::printEnter);
+  Menu *secondMenu = new Menu("Test holding menu");
+
+  Item *firstItem = new Item("My first item");
+  Item *secondItem = new Item("Test item");
+  Menu *randomMenu = new Menu("Testing interoperability");
+  Item *thirdItem = new Item("Third item");
+
+  Item *fourthItem = new Item("fourth");
+  Menu *random2Menu = new Menu("Final menu");
+  Menu *rand3Menu = new Menu("just a test");
+
+  Setting *bSetting = new BoolSetting("Bool 1", &(dummy->test), dummy, &Dummy::printStates);
+  Setting *b2Setting = new BoolSetting("Bool 2", &(dummy->test2), dummy, &Dummy::printStates);
+  Setting *iSetting = new IntSetting("Int 1", &(dummy->val), dummy, &Dummy::printStates);
+
+  mainMenu->addItems(firstMenu, nSetting);
+  firstMenu->addItems(bSetting, secondMenu);
+  secondMenu->addItems(b2Setting, firstItem, secondItem, randomMenu, thirdItem);
+  randomMenu->addItems(fourthItem, random2Menu, iSetting, rand3Menu);
+
+  screen = new Screen(16, 2, mainMenu);
+
+  screen->show();
 
   sys = new Control();
 
@@ -97,12 +136,43 @@ void setup() {
 
 void loop() {
 
+  bool typed = false;
+  while(Serial.available() > 0){
+    int choice = Serial.parseInt();
+    if(!typed){
+      Serial.println(choice);
+      switch(choice){
+        case 8:
+        screen->up();
+        break;
+        case 2:
+        screen->down();
+        break;
+        case 5: 
+        screen->enter();
+        break;
+        case 3:
+        screen->back();
+        break;
+        case 4:
+        screen->left();
+        break;
+        case 6:
+        screen->right();
+        break;
+      }
+    //screen->flash(&printItem);
+    screen->show();
+    typed = true;
+    }
+  }
+  /*
   while (Serial.available())
   {
     int choice = Serial.parseInt();
     sys->mainSwitch(choice);
   }
-
+  */
   sys->update();
 }
 
