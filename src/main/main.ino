@@ -19,6 +19,8 @@
 #include "Setting.h"
 #include "BoolSetting.h"
 #include "IntSetting.h"
+#include "IntBitSetting.h"
+#include "BoolBitSetting.h"
 #include "Screen.h"
 
 
@@ -85,38 +87,12 @@ void setup() {
 
   pinMode(4, OUTPUT);
   digitalWrite(4, HIGH);
-
-  Dummy *dummy = new Dummy(false, true, 6);
-
-  Menu *mainMenu = new Menu("My main menu");
-
-  Menu *firstMenu = new Menu("My first menu");
-  Setting *nSetting = new Setting("Trigger", dummy, &Dummy::printEnter);
-  Menu *secondMenu = new Menu("Test holding menu");
-
-  Item *firstItem = new Item("My first item");
-  Item *secondItem = new Item("Test item");
-  Menu *randomMenu = new Menu("Testing interoperability");
-  Item *thirdItem = new Item("Third item");
-
-  Item *fourthItem = new Item("fourth");
-  Menu *random2Menu = new Menu("Final menu");
-  Menu *rand3Menu = new Menu("just a test");
-
-  Setting *bSetting = new BoolSetting("Bool 1", &(dummy->test), dummy, &Dummy::printStates);
-  Setting *b2Setting = new BoolSetting("Bool 2", &(dummy->test2), dummy, &Dummy::printStates);
-  Setting *iSetting = new IntSetting("Int 1", &(dummy->val), dummy, &Dummy::printStates);
-
-  mainMenu->addItems(firstMenu, nSetting);
-  firstMenu->addItems(bSetting, secondMenu);
-  secondMenu->addItems(b2Setting, firstItem, secondItem, randomMenu, thirdItem);
-  randomMenu->addItems(fourthItem, random2Menu, iSetting, rand3Menu);
-
-  screen = new Screen(16, 2, mainMenu);
-
-  screen->show();
-
+  
   sys = new Control();
+
+  //screen = new Screen(16, 2, mainMenu);
+  
+  //screen->show();
 
   pinMode(lightControlPin, OUTPUT); // Control light control pin as output
   pinMode(SensorPowerPin, OUTPUT); // Control humidity sensor power as output
@@ -162,7 +138,7 @@ void loop() {
         break;
       }
     //screen->flash(&printItem);
-    screen->show();
+    //screen->show();
     typed = true;
     }
   }

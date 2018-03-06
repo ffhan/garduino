@@ -2,17 +2,17 @@
 #define __SETTING_INCLUDED__
 
 #include "Item.h"
-#include "Dummy.h"
+#include "Control.h"
 
 class Setting : public Item{
   protected:
   
-  Dummy *controller = NULL;
+  Control *controller = NULL;
   Event event = NULL;
 
   public:
 
-  Setting(char *title, Dummy *control, Event event);
+  Setting(char *title, Control *control, Event event);
 
   Item *enter();
   

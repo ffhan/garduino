@@ -128,6 +128,12 @@ class Control {
   public : void getRemoteInstructions(DateTime now);
 
   public : void logControl();
+
+  public : void empty();
 };
+
+typedef void (Control::*Event)();
+typedef int (Control::*GetBit)();
+typedef void (Control::*SetBit)(int value);
 
 #endif

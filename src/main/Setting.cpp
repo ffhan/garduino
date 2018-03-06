@@ -1,6 +1,6 @@
 #include "Setting.h"
 
-Setting::Setting(char *title, Dummy *control, Event event) : Item(title){
+Setting::Setting(char *title, Control *control, Event event) : Item(title){
 	controller = control;
 	this->event = event;
 	type = SETTING;

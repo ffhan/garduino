@@ -520,3 +520,5 @@ void Control::logControl() {
 
 }
 
+void Control::empty() {}
+

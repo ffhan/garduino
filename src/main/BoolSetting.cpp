@@ -1,6 +1,6 @@
 #include "BoolSetting.h"
 
-BoolSetting::BoolSetting(char *title, bool *bindValue, Dummy *control, Event event) : ValueSetting<bool>(title, bindValue, control, event){
+BoolSetting::BoolSetting(char *title, bool *bindValue, Control *control, Event event) : ValueSetting<bool>(title, bindValue, control, event){
 	type = BOOLSETTING;
 }
 

@@ -1,6 +1,6 @@
 #include "IntSetting.h"
 
-IntSetting::IntSetting(char *title, int *bindValue, Dummy *control, Event event) : ValueSetting<int>(title, bindValue, control, event){
+IntSetting::IntSetting(char *title, int *bindValue, Control *control, Event event) : ValueSetting<int>(title, bindValue, control, event){
 	type = INTSETTING;
 }
 

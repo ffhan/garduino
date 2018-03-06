@@ -6,7 +6,7 @@
 class IntSetting : public ValueSetting<int>{
   public:
 
-  IntSetting(char *title, int *bindValue, Dummy *control, Event event);
+  IntSetting(char *title, int *bindValue, Control *control, Event event);
   
   void left();
   void right();
