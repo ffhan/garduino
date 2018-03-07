@@ -92,8 +92,8 @@ void setup() {
 
   sys = new Control();
 
-  action = new Action(sys, &Control::empty);
-  action->addPromises(&Control::getLock, &Control::getLightAdmin);
+  action = new Action(sys, &Control::test);
+  action->addPromises(&Control::getLock, &Control::getLightAdmin, &Control::getLightingState);
 
   action->execute();
 

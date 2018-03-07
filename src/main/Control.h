@@ -130,6 +130,7 @@ class Control {
     void logControl();
 
     void empty();
+    void test();
 
 };
 

@@ -1,6 +1,7 @@
 #ifndef __ACTION_INCLUDED__
 #define __ACTION_INCLUDED__
 
+#include "Arduino.h"
 #include "Control.h"
 
 typedef int (Control::*Promise)();
@@ -8,10 +9,12 @@ typedef int (Control::*Promise)();
 class FunctionNode {
   public:
 
-    Promise event;
+    Promise event = NULL;
 
-    Control *sys;
-    FunctionNode *next;
+    int count = 0;
+
+    Control *sys = NULL;
+    FunctionNode *next = NULL;
 
 };
 
@@ -19,14 +22,16 @@ class FunctionList {
   private:
 
     int len = 0;
-    FunctionNode *head;
-    FunctionNode *tail;
+    FunctionNode *head = NULL;
+    FunctionNode *tail = NULL;
 
-    Control *sys;
+    Control *sys = NULL;
 
   public:
 
     FunctionList(Control *control);
+
+    int getLen();
 
     void add(Promise event);
 

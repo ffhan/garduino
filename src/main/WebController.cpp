@@ -65,7 +65,7 @@ WebController::WebController(Control *sys) {
   }
   */
   printOk();
-  delay(6000);
+  delay(2500);
 }
 
 int WebController::buildEntryJson(Fragmentor fp, Fragmentor tp, EProcessor ep, FloatProcessor flp, DateTime now, int soilMoisture, char *soilDescription, float airHumidity, float airTemperature, bool lightState) {

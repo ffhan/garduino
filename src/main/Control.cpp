@@ -529,6 +529,8 @@ void Control::logControl() {
 }
 
 void Control::empty() {
-  Serial.println("TEST PRINT");
+  //Serial.println("TEST PRINT");
 }
-
+void Control::test() {
+  Serial.println("TESTING");
+}
