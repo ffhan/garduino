@@ -8,5 +8,5 @@ Setting::Setting(char *title, Control *control, Event event) : Item(title){
 
 Item *Setting::enter(){
 	(controller->*event)();
-	Item::enter();
+	return Item::enter();
 }

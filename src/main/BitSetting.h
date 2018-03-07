@@ -10,13 +10,13 @@ class BitSetting : public Setting{
   protected:
 
   GetBit getBit;
-  SetBit setBit;
+  int code;
 
   public : 
 
   T tempValue;
 
-  BitSetting(char *title, Control *control, Event event, GetBit getBit, SetBit setBit);
+  BitSetting(char *title, Control *control, Event event, GetBit getBit, int code);
 
   T getValue();
   T getTempValue();

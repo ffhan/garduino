@@ -56,13 +56,14 @@ const char entry8[] PROGMEM = {"\"}\r\n"};
 
 WebController::WebController(Control *sys) {
   this->sys = sys;
-
+  /*
   Serial.print(F("Setup LAN ... "));
   // give the Ethernet shield a second to initialize:
   if (Ethernet.begin(mac) == 0) {
     Serial.print(F("didn't begin. trying static ip.. "));
     Ethernet.begin(mac, ip);
   }
+  */
   printOk();
   delay(6000);
 }

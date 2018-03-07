@@ -1,9 +1,9 @@
 #include "BitSetting.h"
 
 template <class T>
-BitSetting<T>::BitSetting(char *title, Control *control, Event event, GetBit getBit, SetBit setBit) : Setting(title, control, event){
+BitSetting<T>::BitSetting(char *title, Control *control, Event event, GetBit getBit, int code) : Setting(title, control, event){
   this->getBit = getBit;
-  this->setBit = setBit;
+  this->code = code;
   this->tempValue = (T) (control->*getBit)();
   type = BITSETTING;
 }
@@ -25,7 +25,7 @@ bool BitSetting<T>::isSaved(){
 
 template <class T>
 Item *BitSetting<T>::enter(){
-  (controller->*setBit)((T) tempValue);
+  controller->mainSwitch(code);
   return Setting::enter();
 }
 

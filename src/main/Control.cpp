@@ -341,6 +341,7 @@ void Control::mainSwitch(int choice) {
       return;
 
     case 9: // TODO: FAN SPEED SET
+      Serial.println("This implementation is wrong because it doesn't take fan admin into account");
       return;
 
     case 10:
@@ -364,6 +365,13 @@ void Control::mainSwitch(int choice) {
       return;
 
     case 11: //TODO: FAN ADMIN
+      if (getFanAdmin()) {
+        setFanAdmin(0);
+        Serial.println(F("Fan admin mode OFF."));
+        return;
+      }
+      setFanAdmin(1);
+      Serial.println(F("Fan admin mode ON."));
       return;
 
   }

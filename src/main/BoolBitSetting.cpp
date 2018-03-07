@@ -1,14 +1,18 @@
 #include "BoolBitSetting.h"
 #include "Control.h"
 
-BoolBitSetting::BoolBitSetting(char *title, Control *control, Event event, GetBit getBit, SetBit setBit) : BitSetting<bool>(title, control, event, getBit, setBit) {
+BoolBitSetting::BoolBitSetting(char *title, Control *control, Event event, GetBit getBit, int code) : BitSetting<bool>(title, control, event, getBit, code) {
   type = BOOLBITSETTING;
 }
 
 void BoolBitSetting::left() {
-  tempValue = !tempValue;
+  //tempValue = !tempValue;
 }
 void BoolBitSetting::right() {
-  left();
+  //left();
+}
+Item *BoolBitSetting::enter(){
+  BitSetting::enter();
+  tempValue = getValue();
 }
 
