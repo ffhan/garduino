@@ -15,7 +15,7 @@ Control::Control() {
   }
 
   Serial.println(F("done."));
-  
+
   measure = new Measuring();
   remote = new Remote();
   logger = new Logging(this);
@@ -528,5 +528,7 @@ void Control::logControl() {
 
 }
 
-void Control::empty() {}
+void Control::empty() {
+  Serial.println("TEST PRINT");
+}
 

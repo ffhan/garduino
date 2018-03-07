@@ -22,7 +22,7 @@
 #include "IntBitSetting.h"
 #include "BoolBitSetting.h"
 #include "Screen.h"
-
+#include "Action.h"
 
 /*
   const int lightControlPin = 6;
@@ -72,6 +72,8 @@ double getDecimalTime(DateTime now) {
   return (double)now.hour() + ((double)now.minute()) / ((double)60.0) + ((double)now.second()) / ((double)3600.0);
 }
 
+Action *action = (Action *) malloc(sizeof(Action));
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -89,6 +91,11 @@ void setup() {
   digitalWrite(4, HIGH);
 
   sys = new Control();
+
+  action = new Action(sys, &Control::empty);
+  action->addPromises(&Control::getLock, &Control::getLightAdmin);
+
+  action->execute();
 
   Menu *mainMenu = new Menu("Main menu");
 
@@ -178,6 +185,7 @@ void loop() {
           break;
       }
       //screen->flash(&printItem);
+      action->execute();
       screen->show();
       typed = true;
     }
