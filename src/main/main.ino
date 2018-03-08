@@ -93,7 +93,13 @@ void setup() {
   sys = new Control();
 
   action = new Action(sys, &Control::test);
-  action->addPromises(&Control::getLock, &Control::getLightAdmin, &Control::getLightingState);
+  action->addPromises([&sys]() {
+    return 1 - sys->getLock();
+  },
+  [&sys]() {
+    return sys->getLightAdmin();
+  }
+                     );
 
   action->execute();
 
@@ -108,16 +114,16 @@ void setup() {
   Menu *wateringSettings = new Menu("Watering controls");
   Menu *fanSettings = new Menu("Fan settings");
 
-  //  Setting *measureCommand = new Setting("Measure", sys, Control:: 
+  //  Setting *measureCommand = new Setting("Measure", sys, Control::
   //  currently not able to execute commands unless through mainSwitch.
   //  The current system is messy. I want to delegate everything through the mainSwitch,
   //  because dealing with an enormous amount of member functions just to evade adding
   //  int code in settings by default increases system complication.
   //  Con of this approach is that I'm cornering myself into using only mainSwitch.
   //  That's bad design, already messing with me with BoolBitSettings.
-  
+
   BoolBitSetting *globalLockSetting = new BoolBitSetting("Global lock", sys, &Control::empty, &Control::getLock, 0);
-  
+
   BoolBitSetting *lightAdminSetting = new BoolBitSetting("Light admin", sys, &Control::empty, &Control::getLightAdmin, 4);
   BoolBitSetting *lightStateSetting = new BoolBitSetting("Light state", sys, &Control::empty, &Control::getLightingState, 1);
 

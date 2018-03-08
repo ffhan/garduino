@@ -4,6 +4,7 @@ FunctionList::FunctionList(Control *control) {
   sys = control;
 }
 
+
 void FunctionList::add(Promise event) {
   FunctionNode *node = new FunctionNode();
   node->event = event;
@@ -43,15 +44,16 @@ bool FunctionList::allTrue() {
   Promise item = head->event;
 
   //Serial.print("0"); Serial.println((sys->*item)());
-  if (!(sys->*item)()) return false;
 
   int i = 1;
   while (head) {
+
+    if (!(*item)()) return false;
+
     head = head->next;
     item = head->event;
 
     //Serial.print(i); Serial.println((sys->*item)());
-    if (!(sys->*item)()) return false;
 
     i++;
   }
@@ -68,14 +70,13 @@ bool FunctionList::anyTrue() {
   FunctionNode *head = this->head;
   Promise item = head->event;
 
-  if ((sys->*item)()) return true;
-
   int i = 1;
   while (head) {
+
+    if ((*item)()) return true;
+
     head = head->next;
     item = head->event;
-
-    if ((sys->*item)()) return true;
 
     i++;
   }
@@ -90,6 +91,8 @@ Action::Action(Control *control, Event event) {
 }
 
 void Action::execute() {
-  if (list->allTrue()) (sys->*event)();
+  if (list->allTrue()) {
+    (sys->*event)();
+  }
 }
 

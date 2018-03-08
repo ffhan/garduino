@@ -4,7 +4,9 @@
 #include "Arduino.h"
 #include "Control.h"
 
-typedef int (Control::*Promise)();
+using namespace std;
+
+typedef int (*Promise)();
 
 class FunctionNode {
   public:
@@ -33,7 +35,7 @@ class FunctionList {
 
     int getLen();
 
-    void add(Promise event);
+    void add(int (*func)());
 
     bool allTrue();
     bool anyTrue();
