@@ -92,17 +92,6 @@ void setup() {
 
   sys = new Control();
 
-  action = new Action(sys, &Control::test);
-  action->addPromises([&sys]() {
-    return 1 - sys->getLock();
-  },
-  [&sys]() {
-    return sys->getLightAdmin();
-  }
-                     );
-
-  action->execute();
-
   Menu *mainMenu = new Menu("Main menu");
 
   Menu *sysControlMenu = new Menu("System control");
@@ -191,7 +180,6 @@ void loop() {
           break;
       }
       //screen->flash(&printItem);
-      action->execute();
       screen->show();
       typed = true;
     }

@@ -7,6 +7,7 @@ class WebController;
 class Remote;
 class Measuring;
 class Logging;
+class ActionBinaryTree;
 
 class Control {
     /*
@@ -53,6 +54,7 @@ class Control {
     Remote *remote;
     RTC_DS3231 *rtc;
     WebController *web;
+    ActionBinaryTree *actions;
 
     Control();
 
@@ -71,7 +73,9 @@ class Control {
     void writeSpeed(int posit, int bitSize, int value);
     void writeState(sector search, int value);
 
-  public : void printState();
+  public :
+
+    void printState();
 
     int getCodeFetch();
     void setCodeFetch(int value);
@@ -109,6 +113,24 @@ class Control {
     void heatSwitch(int state);
 
     void mainSwitch(int choice);
+
+    void globalLockEvent();
+    
+    void lightAdminEvent();
+    void lightStateEvent();
+    
+    void heatAdminEvent();
+    void heatStateEvent();
+    
+    void loggingEvent();
+    
+    void wateringAdminEvent();
+    void wateringStateEvent();
+
+    void measureEvent();
+
+    void printTimeEvent();
+    void setTimeEvent();
 
     DateTime getTime();
     void updateTime();

@@ -4,10 +4,25 @@ FunctionList::FunctionList(Control *control) {
   sys = control;
 }
 
+PromisePack::PromisePack(Control *sys, Promise promise, char *failMessage, bool complement = false) {
+  this->failMessage = failMessage;
+  this->promise = promise;
+}
 
-void FunctionList::add(Promise event) {
+bool PromisePack::go() {
+  if(complement){
+    if(1 - (*promise)()) return true;
+    Serial.println(failMessage);
+    return false;
+  }
+  if ((*promise)()) return true;
+  Serial.println(failMessage);
+  return false;
+}
+
+void FunctionList::add(PromisePack *promise) {
   FunctionNode *node = new FunctionNode();
-  node->event = event;
+  node->event = promise;
   node->sys = sys;
   node->count = len++;
   //Serial.println(node->count);
@@ -41,14 +56,14 @@ bool FunctionList::allTrue() {
   }
 
   FunctionNode *head = this->head;
-  Promise item = head->event;
+  PromisePack *item = head->event;
 
   //Serial.print("0"); Serial.println((sys->*item)());
 
   int i = 1;
   while (head) {
 
-    if (!(*item)()) return false;
+    if (!item->go()) return false;
 
     head = head->next;
     item = head->event;
@@ -68,12 +83,12 @@ bool FunctionList::anyTrue() {
   }
 
   FunctionNode *head = this->head;
-  Promise item = head->event;
+  PromisePack *item = head->event;
 
   int i = 1;
   while (head) {
 
-    if ((*item)()) return true;
+    if (item->go()) return true;
 
     head = head->next;
     item = head->event;
@@ -84,8 +99,9 @@ bool FunctionList::anyTrue() {
   return false;
 }
 
-Action::Action(Control *control, Event event) {
+Action::Action(Control *control, int code, Event event) {
   sys = control;
+  this->code = code;
   list = new FunctionList(sys);
   this->event = event;
 }

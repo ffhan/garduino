@@ -8,10 +8,25 @@ using namespace std;
 
 typedef int (*Promise)();
 
+class PromisePack {
+  private:
+
+    char *failMessage;
+    Promise promise = NULL;
+    bool complement;
+
+  public:
+
+    PromisePack(Control *sys, Promise promise, char *failMessage, bool complement = false);
+
+    bool go();
+
+};
+
 class FunctionNode {
   public:
 
-    Promise event = NULL;
+    PromisePack *event = NULL;
 
     int count = 0;
 
@@ -35,7 +50,7 @@ class FunctionList {
 
     int getLen();
 
-    void add(int (*func)());
+    void add(PromisePack *promise);
 
     bool allTrue();
     bool anyTrue();
@@ -51,12 +66,14 @@ class Action {
 
   public :
 
-    Action(Control *control, Event event);
+    int code;
+
+    Action(Control *control, int code, Event event);
 
     void addPromises() {}
 
     template <typename ... Args>
-    void addPromises(Promise event, Args ... args) {
+    void addPromises(PromisePack *event, Args ... args) {
       list->add(event);
       addPromises(args...);
     }
