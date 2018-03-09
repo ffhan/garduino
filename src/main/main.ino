@@ -116,11 +116,11 @@ void setup() {
   BoolBitSetting *lightAdminSetting = new BoolBitSetting("Light admin", sys, sys->lightAdminAction, &Control::getLightAdmin);
   BoolBitSetting *lightStateSetting = new BoolBitSetting("Light state", sys, sys->lightStateAction, &Control::getLightingState);
 
-  //BoolBitSetting *heatAdminSetting = new BoolBitSetting("Heating admin", sys, &Control::empty, &Control::getHeatAdmin);
-  //BoolBitSetting *heatStateSetting = new BoolBitSetting("Heating state", sys, &Control::empty, &Control::getHeatingState, 3);
+  BoolBitSetting *heatAdminSetting = new BoolBitSetting("Heating admin", sys, sys->heatAdminAction, &Control::getHeatAdmin);
+  BoolBitSetting *heatStateSetting = new BoolBitSetting("Heating state", sys, sys->heatStateAction, &Control::getHeatingState);
 
-  //BoolBitSetting *wateringAdminSetting = new BoolBitSetting("Watering admin", sys, &Control::empty, &Control::getWateringAdmin, 10);
-  //BoolBitSetting *wateringStateSetting = new BoolBitSetting("Watering state", sys, &Control::empty, &Control::getWateringState, 7);
+  BoolBitSetting *wateringAdminSetting = new BoolBitSetting("Watering admin", sys, sys->wateringAdminAction, &Control::getWateringAdmin);
+  BoolBitSetting *wateringStateSetting = new BoolBitSetting("Watering state", sys, sys->wateringStateAction, &Control::getWateringState);
 
   //BoolBitSetting *fanAdminSetting = new BoolBitSetting("Fan admin", sys, &Control::empty, &Control::getFanAdmin, 11);
   //IntBitSetting *fanSpeedSetting = new IntBitSetting("Fan speed", sys, &Control::empty, &Control::getFanSpeed, 9, 7);
@@ -131,8 +131,8 @@ void setup() {
   mainMenu->addItems(commandMenu, sysControlMenu);
   sysControlMenu->addItems(globalLockSetting, lightSettings, heatSettings, wateringSettings, fanSettings);
   lightSettings->addItems(lightAdminSetting, lightStateSetting);
-  //heatSettings->addItems(heatAdminSetting, heatStateSetting);
-  //wateringSettings->addItems(wateringAdminSetting, wateringStateSetting);
+  heatSettings->addItems(heatAdminSetting, heatStateSetting);
+  wateringSettings->addItems(wateringAdminSetting, wateringStateSetting);
   //fanSettings->addItems(fanAdminSetting, fanSpeedSetting);
 
   screen = new Screen(16, 2, mainMenu);

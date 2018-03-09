@@ -39,7 +39,17 @@ Control::Control() {
 
   printTimeAction = new Action(this, 8, &Control::printTimeEvent);
 
-  actions->insert(globalLockAction, lightAdminAction, lightStateAction);
+  heatAdminAction = new Action(this, 6, &Control::heatAdminEvent);
+  heatAdminAction->addPromises(globalLockPromise);
+  heatStateAction = new Action(this, 3, &Control::heatStateEvent);
+  heatStateAction->addPromises(globalLockPromise, heatAdminPromise);
+
+  wateringAdminAction = new Action(this, 10, &Control::wateringAdminEvent);
+  wateringAdminAction->addPromises(globalLockPromise);
+  wateringStateAction = new Action(this, 7, &Control::wateringStateEvent);
+  wateringStateAction->addPromises(globalLockPromise, wateringAdminPromise);
+
+  actions->insert(globalLockAction, lightAdminAction, lightStateAction, heatAdminAction, heatStateAction);
 
   web = new WebController(this);
 }

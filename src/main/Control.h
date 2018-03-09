@@ -80,9 +80,17 @@ class Control {
     PromisePack *wateringAdminPromise = NULL;
 
     Action *globalLockAction = NULL;
-    Action *lightAdminAction = NULL;
+    
+	Action *lightAdminAction = NULL;
     Action *lightStateAction = NULL;
-    Action *printTimeAction = NULL;
+    
+	Action *printTimeAction = NULL;
+
+	Action *heatAdminAction = NULL;
+	Action *heatStateAction = NULL;
+
+	Action *wateringAdminAction = NULL;
+	Action *wateringStateAction = NULL;
 
     Control();
 
