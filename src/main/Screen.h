@@ -3,8 +3,8 @@
 
 #include "Arduino.h"
 //#include "Item.h"
-#include "IntSetting.h"
-#include "BoolSetting.h"
+//#include "IntSetting.h"
+//#include "BoolSetting.h"
 //#include "Setting.h"
 #include "Menu.h"
 
@@ -46,6 +46,8 @@ class Screen{
   void right();
   
   void flash(Printer func);
+  template <class T>
+  void valueSettingTrailPrint(Item *item);
   void show();
 };
 

@@ -19,8 +19,10 @@
 #include "Setting.h"
 #include "BoolSetting.h"
 #include "IntSetting.h"
+#include "IntBitSetting.h"
+#include "BoolBitSetting.h"
 #include "Screen.h"
-
+#include "Action.h"
 
 /*
   const int lightControlPin = 6;
@@ -70,6 +72,8 @@ double getDecimalTime(DateTime now) {
   return (double)now.hour() + ((double)now.minute()) / ((double)60.0) + ((double)now.second()) / ((double)3600.0);
 }
 
+Action *action = (Action *) malloc(sizeof(Action));
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -86,37 +90,54 @@ void setup() {
   pinMode(4, OUTPUT);
   digitalWrite(4, HIGH);
 
-  Dummy *dummy = new Dummy(false, true, 6);
+  sys = new Control();
 
-  Menu *mainMenu = new Menu("My main menu");
+  Menu *mainMenu = new Menu("Main menu");
 
-  Menu *firstMenu = new Menu("My first menu");
-  Setting *nSetting = new Setting("Trigger", dummy, &Dummy::printEnter);
-  Menu *secondMenu = new Menu("Test holding menu");
+  Menu *sysControlMenu = new Menu("Settings");
 
-  Item *firstItem = new Item("My first item");
-  Item *secondItem = new Item("Test item");
-  Menu *randomMenu = new Menu("Testing interoperability");
-  Item *thirdItem = new Item("Third item");
+  Menu *commandMenu = new Menu("Commands");
 
-  Item *fourthItem = new Item("fourth");
-  Menu *random2Menu = new Menu("Final menu");
-  Menu *rand3Menu = new Menu("just a test");
+  Menu *lightSettings = new Menu("Light controls");
+  Menu *heatSettings = new Menu("Heat controls");
+  Menu *wateringSettings = new Menu("Watering controls");
+  Menu *fanSettings = new Menu("Fan settings");
 
-  Setting *bSetting = new BoolSetting("Bool 1", &(dummy->test), dummy, &Dummy::printStates);
-  Setting *b2Setting = new BoolSetting("Bool 2", &(dummy->test2), dummy, &Dummy::printStates);
-  Setting *iSetting = new IntSetting("Int 1", &(dummy->val), dummy, &Dummy::printStates);
+  //  Setting *measureCommand = new Setting("Measure", sys, Control::
+  //  currently not able to execute commands unless through mainSwitch.
+  //  The current system is messy. I want to delegate everything through the mainSwitch,
+  //  because dealing with an enormous amount of member functions just to evade adding
+  //  int code in settings by default increases system complication.
+  //  Con of this approach is that I'm cornering myself into using only mainSwitch.
+  //  That's bad design, already messing with me with BoolBitSettings.
 
-  mainMenu->addItems(firstMenu, nSetting);
-  firstMenu->addItems(bSetting, secondMenu);
-  secondMenu->addItems(b2Setting, firstItem, secondItem, randomMenu, thirdItem);
-  randomMenu->addItems(fourthItem, random2Menu, iSetting, rand3Menu);
+  BoolBitSetting *globalLockSetting = new BoolBitSetting("Global lock", sys, sys->globalLockAction, &Control::getLock);
+
+  BoolBitSetting *lightAdminSetting = new BoolBitSetting("Light admin", sys, sys->lightAdminAction, &Control::getLightAdmin);
+  BoolBitSetting *lightStateSetting = new BoolBitSetting("Light state", sys, sys->lightStateAction, &Control::getLightingState);
+
+  //BoolBitSetting *heatAdminSetting = new BoolBitSetting("Heating admin", sys, &Control::empty, &Control::getHeatAdmin);
+  //BoolBitSetting *heatStateSetting = new BoolBitSetting("Heating state", sys, &Control::empty, &Control::getHeatingState, 3);
+
+  //BoolBitSetting *wateringAdminSetting = new BoolBitSetting("Watering admin", sys, &Control::empty, &Control::getWateringAdmin, 10);
+  //BoolBitSetting *wateringStateSetting = new BoolBitSetting("Watering state", sys, &Control::empty, &Control::getWateringState, 7);
+
+  //BoolBitSetting *fanAdminSetting = new BoolBitSetting("Fan admin", sys, &Control::empty, &Control::getFanAdmin, 11);
+  //IntBitSetting *fanSpeedSetting = new IntBitSetting("Fan speed", sys, &Control::empty, &Control::getFanSpeed, 9, 7);
+
+  Setting *printTimeCommand = new Setting("Print time", sys, sys->printTimeAction);
+  commandMenu->addItems(printTimeCommand);
+
+  mainMenu->addItems(commandMenu, sysControlMenu);
+  sysControlMenu->addItems(globalLockSetting, lightSettings, heatSettings, wateringSettings, fanSettings);
+  lightSettings->addItems(lightAdminSetting, lightStateSetting);
+  //heatSettings->addItems(heatAdminSetting, heatStateSetting);
+  //wateringSettings->addItems(wateringAdminSetting, wateringStateSetting);
+  //fanSettings->addItems(fanAdminSetting, fanSpeedSetting);
 
   screen = new Screen(16, 2, mainMenu);
 
   screen->show();
-
-  sys = new Control();
 
   pinMode(lightControlPin, OUTPUT); // Control light control pin as output
   pinMode(SensorPowerPin, OUTPUT); // Control humidity sensor power as output
@@ -137,41 +158,41 @@ void setup() {
 void loop() {
 
   bool typed = false;
-  while(Serial.available() > 0){
+  while (Serial.available() > 0) {
     int choice = Serial.parseInt();
-    if(!typed){
+    if (!typed) {
       Serial.println(choice);
-      switch(choice){
+      switch (choice) {
         case 8:
-        screen->up();
-        break;
+          screen->up();
+          break;
         case 2:
-        screen->down();
-        break;
-        case 5: 
-        screen->enter();
-        break;
+          screen->down();
+          break;
+        case 5:
+          screen->enter();
+          break;
         case 3:
-        screen->back();
-        break;
+          screen->back();
+          break;
         case 4:
-        screen->left();
-        break;
+          screen->left();
+          break;
         case 6:
-        screen->right();
-        break;
+          screen->right();
+          break;
       }
-    //screen->flash(&printItem);
-    screen->show();
-    typed = true;
+      //screen->flash(&printItem);
+      screen->show();
+      typed = true;
     }
   }
   /*
-  while (Serial.available())
-  {
+    while (Serial.available())
+    {
     int choice = Serial.parseInt();
     sys->mainSwitch(choice);
-  }
+    }
   */
   sys->update();
 }

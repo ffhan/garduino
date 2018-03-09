@@ -4,7 +4,7 @@
 #include "Arduino.h"
 
 typedef enum {
-    ITEM = 0, SETTING = 1, BOOLSETTING = 2, INTSETTING = 3, MENU = 4
+    ITEM = 0, SETTING = 1, BOOLSETTING = 2, INTSETTING = 3, BITSETTING = 4, INTBITSETTING = 5, BOOLBITSETTING = 6, MENU = 7
 } itemType;
 
 //typedef void (*Printer) (Item *item);

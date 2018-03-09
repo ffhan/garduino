@@ -3,6 +3,8 @@
 #include "Measuring.h"
 #include "remote.h"
 #include "Logging.h"
+#include "ActionBinaryTree.h"
+#include "Action.h"
 #include "pins.h"
 
 extern double getDecimalTime(DateTime now);
@@ -15,10 +17,29 @@ Control::Control() {
   }
 
   Serial.println(F("done."));
-  
+
   measure = new Measuring();
   remote = new Remote();
   logger = new Logging(this);
+  actions = new ActionBinaryTree();
+
+  globalLockPromise = new PromisePack(this, &Control::getLock, "ACCESS DENIED: GLOBAL LOCK ON.", true);
+  lightAdminPromise = new PromisePack(this, &Control::getLightAdmin, "Light access denied: Light admin OFF.");
+  heatAdminPromise = new PromisePack(this, &Control::getHeatAdmin, "Heating access denied: Heating admin OFF.");
+  loggingPromise = new PromisePack(this, &Control::getLogging, "Logging disabled.");
+  wateringAdminPromise = new PromisePack(this, &Control::getWateringAdmin, "Watering access denied: Watering admin OFF.");
+
+  globalLockAction = new Action(this, 0, &Control::globalLockEvent);
+
+  lightAdminAction = new Action(this, 4, &Control::lightAdminEvent);
+  lightAdminAction->addPromises(globalLockPromise);
+
+  lightStateAction = new Action(this, 1, &Control::lightStateEvent);
+  lightStateAction->addPromises(globalLockPromise, lightAdminPromise);
+
+  printTimeAction = new Action(this, 8, &Control::printTimeEvent);
+
+  actions->insert(globalLockAction, lightAdminAction, lightStateAction);
 
   web = new WebController(this);
 }
@@ -211,28 +232,25 @@ void Control::heatSwitch(int state) {
 }
 
 void Control::mainSwitch(int choice) {
-  if (getLock()) {
+  Action *action = actions->retrieve(choice);
+  if(action) action->execute();
+  /*
+    if (getLock()) {
     switch (choice) {
-      case 500:
-        return;
-      case 8:
-        logger->printTime(now);
-        break;
+
       case 5:
         if (getLogging()) logger->logData(now, measure);
         else Serial.println(F("Didn't write, that's what you wanted, right?"));
-        break;
       case 0:
-        setLock(0);
-        Serial.println(F("GLOBAL LOCK OFF."));
+
         return;
       default:
         Serial.println(F("ACCESS DENIED: GLOBAL LOCK ON."));
         return;
     }
     return;
-  }
-  switch (choice) {
+    }
+    switch (choice) {
     case 200:
       web->getMyId();
       return;
@@ -247,24 +265,124 @@ void Control::mainSwitch(int choice) {
         SysCall::halt();
         return;
       }
-    */
+
     case 1: // switch for lighting
-      if (!getLightAdmin()) {
-        Serial.println(F("Lighting access denied: Light admin mode OFF."));
+
+
+    case 3:
+      if (!getHeatAdmin()) {
+        Serial.println(F("Heating access denied: Heat admin mode OFF."));
         return;
       }
-      if (getLightingState()) {
-        Serial.println(F("Custom mode: light OFF."));
-        setLightingState(0);
-        digitalWrite(lightControlPin, HIGH);
+
+
+    case 4:
+
+
+    case 5: {
+        if (getLogging()) logger->logData(now, measure);
+        else Serial.println(F("Didn't write, that's what you wanted, right?"));
         return;
       }
-      Serial.println(F("Custom mode: light ON."));
-      setLightingState(1);
-      digitalWrite(lightControlPin, LOW);
+
+    case 6:
+
+
+    case 7:
+      if (!getWateringAdmin()) {
+        Serial.println(F("Watering access denied: Watering admin mode OFF."));
+        return;
+      }
+
+
+    case 8:
+
       return;
-    /*
-      case 2:
+
+    case 9: // TODO: FAN SPEED SET
+      Serial.println("This implementation is wrong because it doesn't take fan admin into account");
+      return;
+
+    case 10:
+
+
+    case 0:
+
+
+    case 11: //TODO: FAN ADMIN
+      if (getFanAdmin()) {
+        setFanAdmin(0);
+        Serial.println(F("Fan admin mode OFF."));
+        return;
+      }
+      setFanAdmin(1);
+      Serial.println(F("Fan admin mode ON."));
+      return;
+
+    }
+  */
+}
+
+void Control::globalLockEvent() {
+  if (getLock()) {
+    setLock(0);
+    Serial.println(F("GLOBAL LOCK OFF."));
+    return;
+  }
+  setLock(1);
+  Serial.println(F("GLOBAL LOCK ON."));
+  return;
+}
+
+void Control::lightAdminEvent() {
+  if (getLightAdmin()) {
+    setLightAdmin(0);
+    Serial.println(F("Light admin mode OFF."));
+    return;
+  }
+  setLightAdmin(1);
+  Serial.println(F("Light admin mode ON."));
+  return;
+}
+
+void Control::lightStateEvent() {
+  if (getLightingState()) {
+    Serial.println(F("Custom mode: light OFF."));
+    setLightingState(0);
+    digitalWrite(lightControlPin, HIGH);
+    return;
+  }
+  Serial.println(F("Custom mode: light ON."));
+  setLightingState(1);
+  digitalWrite(lightControlPin, LOW);
+  return;
+}
+
+void Control::heatAdminEvent() {
+  if (getHeatAdmin()) {
+    setHeatAdmin(0);
+    Serial.println(F("Heat admin mode OFF."));
+    return;
+  }
+  setHeatAdmin(1);
+  Serial.println(F("Heat admin mode ON."));
+  return;
+}
+void Control::heatStateEvent() {
+  if (getHeatingState()) {
+    Serial.println(F("Custom mode: heating OFF."));
+    //setHeatingState(0);
+    heatSwitch(0);
+    return;
+  }
+  Serial.println(F("Custom mode: heating ON."));
+  //setLightingState(1);
+  heatSwitch(1);
+  return;
+}
+
+void Control::loggingEvent() {
+  /*
       if (getIsInitialised()) {
       setLogging(0);
       file.close();
@@ -277,96 +395,41 @@ void Control::mainSwitch(int choice) {
       Serial.println(F("Logging mode ON."));
       }
       return;
-    */
-    case 3:
-      if (!getHeatAdmin()) {
-        Serial.println(F("Heating access denied: Heat admin mode OFF."));
-        return;
-      }
-      if (getHeatingState()) {
-        Serial.println(F("Custom mode: heating OFF."));
-        setHeatingState(0);
-        heatSwitch(0);
-        return;
-      }
-      Serial.println(F("Custom mode: heating ON."));
-      setLightingState(1);
-      heatSwitch(1);
-      return;
+  */
+}
 
-    case 4:
-      if (getLightAdmin()) {
-        setLightAdmin(0);
-        Serial.println(F("Light admin mode OFF."));
-        return;
-      }
-      setLightAdmin(1);
-      Serial.println(F("Light admin mode ON."));
-      return;
-
-    case 5: {
-        if (getLogging()) logger->logData(now, measure);
-        else Serial.println(F("Didn't write, that's what you wanted, right?"));
-        return;
-      }
-
-    case 6:
-      if (getHeatAdmin()) {
-        setHeatAdmin(0);
-        Serial.println(F("Heat admin mode OFF."));
-        return;
-      }
-      setHeatAdmin(1);
-      Serial.println(F("Heat admin mode ON."));
-      return;
-
-    case 7:
-      if (!getWateringAdmin()) {
-        Serial.println(F("Watering access denied: Watering admin mode OFF."));
-        return;
-      }
-      if (getWateringState()) {
-        Serial.println(F("Custom mode: watering OFF."));
-        setWateringState(0);
-        digitalWrite(waterControlPin, LOW);
-        return;
-      }
-      Serial.println(F("Custom mode: watering ON."));
-      setWateringState(1);
-      digitalWrite(waterControlPin, HIGH);
-      return;
-
-    case 8:
-      logger->printTime(now);
-      return;
-
-    case 9: // TODO: FAN SPEED SET
-      return;
-
-    case 10:
-      if (getWateringAdmin()) {
-        setWateringAdmin(0);
-        Serial.println(F("Watering admin mode OFF."));
-        return;
-      }
-      setWateringAdmin(1);
-      Serial.println(F("Watering admin mode ON."));
-      return;
-
-    case 0:
-      if (getLock()) {
-        setLock(0);
-        Serial.println(F("GLOBAL LOCK OFF."));
-        return;
-      }
-      setLock(1);
-      Serial.println(F("GLOBAL LOCK ON."));
-      return;
-
-    case 11: //TODO: FAN ADMIN
-      return;
-
+void Control::wateringAdminEvent() {
+  if (getWateringAdmin()) {
+    setWateringAdmin(0);
+    Serial.println(F("Watering admin mode OFF."));
+    return;
   }
+  setWateringAdmin(1);
+  Serial.println(F("Watering admin mode ON."));
+  return;
+}
+void Control::wateringStateEvent() {
+  if (getWateringState()) {
+    Serial.println(F("Custom mode: watering OFF."));
+    setWateringState(0);
+    digitalWrite(waterControlPin, LOW);
+    return;
+  }
+  Serial.println(F("Custom mode: watering ON."));
+  setWateringState(1);
+  digitalWrite(waterControlPin, HIGH);
+  return;
+}
+
+void Control::measureEvent() {
+  logger->logData(now, measure);
+}
+
+void Control::printTimeEvent() {
+  logger->printTime(now);
+}
+void Control::setTimeEvent() {
+  Serial.println(F("unimplemented."));
 }
 
 DateTime Control::getTime() {
@@ -488,6 +551,7 @@ void Control::getRemoteInstructions(DateTime now) {
 }
 
 void Control::logControl() {
+  /*
   if (now.second() == 0 && (now.hour() % 1 == 0) && ((now.minute() % 30 == 0) || now.minute() == 0)) {
     setWritten(0);
   }
@@ -497,6 +561,7 @@ void Control::logControl() {
   if (now.second() == 0 && now.minute() == 0 && now.hour() == 1) {
     setNetReconf(1);
   }
+  */
 
   if (!getWritten()) {
 
@@ -520,3 +585,9 @@ void Control::logControl() {
 
 }
 
+void Control::empty() {
+  //Serial.println("TEST PRINT");
+}
+void Control::test() {
+  Serial.println("TESTING");
+}

@@ -7,6 +7,9 @@ class WebController;
 class Remote;
 class Measuring;
 class Logging;
+class ActionBinaryTree;
+class PromisePack;
+class Action;
 
 class Control {
     /*
@@ -30,104 +33,153 @@ class Control {
        | 15  |  _0_  | NET_RECONF  | 0 - NETWORK CONFIGURED, 1 - NETWORK NEEDS RECONFIGURATION
     */
 
-  private : 
-  
-  const int _defaultData = 0x0057;
-  int _data = 0x0057;
-  int fanSpeed_bitsize = 3;
+  private :
 
-  DateTime now;
+    const int _defaultData = 0x0057;
+    int _data = 0x0057;
+    int fanSpeed_bitsize = 3;
 
-  typedef enum {LOCK = 0, LOGGING = 1, WRITTEN = 2, IS_INITIALISED = 3,
-                            LIGHTING_STATE = 4, LIGHT_ADMIN = 5,
-                            HEATING_STATE = 6, HEAT_ADMIN = 7,
-                            WATERING_STATE = 8, WATERING_ADMIN = 9,
-                            FAN_SPEED = 10, FAN_ADMIN = 13,
-                            CODE_FETCH = 14, NET_RECONF = 15
-                           } sector;
+    //printTime probably won't work if this is not set.
+    DateTime now;
 
-  public : 
-  
-  Measuring *measure;
-  Logging *logger;
-  Remote *remote;
-  RTC_DS3231 *rtc;
-  WebController *web;
+    typedef enum {LOCK = 0, LOGGING = 1, WRITTEN = 2, IS_INITIALISED = 3,
+                  LIGHTING_STATE = 4, LIGHT_ADMIN = 5,
+                  HEATING_STATE = 6, HEAT_ADMIN = 7,
+                  WATERING_STATE = 8, WATERING_ADMIN = 9,
+                  FAN_SPEED = 10, FAN_ADMIN = 13,
+                  CODE_FETCH = 14, NET_RECONF = 15
+                 } sector;
 
-  Control();
-  
+  public :
+
+    Measuring *measure = NULL;
+    Logging *logger = NULL;
+    Remote *remote = NULL;
+    RTC_DS3231 *rtc = NULL;
+    WebController *web = NULL;
+    ActionBinaryTree *actions = NULL;
+
+    /*
+      void globalLockEvent();
+      void lightAdminEvent();
+      void lightStateEvent();
+      void heatAdminEvent();
+      void heatStateEvent();
+      void loggingEvent();
+      void wateringAdminEvent();
+      void wateringStateEvent();
+      void measureEvent();
+      void printTimeEvent();
+      void setTimeEvent();
+    */
+
+    PromisePack *globalLockPromise = NULL;
+    PromisePack *lightAdminPromise = NULL;
+    PromisePack *heatAdminPromise = NULL;
+    PromisePack *loggingPromise = NULL;
+    PromisePack *wateringAdminPromise = NULL;
+
+    Action *globalLockAction = NULL;
+    Action *lightAdminAction = NULL;
+    Action *lightStateAction = NULL;
+    Action *printTimeAction = NULL;
+
+    Control();
+
   private : int readPosition(int posit);
 
-  private : int readSpeed(int init_position, int bitSize);
-  private : int readState(sector search);
+    int readSpeed(int init_position, int bitSize);
+    int readState(sector search);
 
   public : int getRawData();
-    
+
   private : void setPosition(int posit);
 
-  private : void erasePosition(int posit);
+    void erasePosition(int posit);
 
-  private : void writePosition(int posit, bool value);
-  private : void writeSpeed(int posit, int bitSize, int value);
-  private : void writeState(sector search, int value);
+    void writePosition(int posit, bool value);
+    void writeSpeed(int posit, int bitSize, int value);
+    void writeState(sector search, int value);
 
-  public : void printState();
+  public :
 
-  public : int getCodeFetch();
-  public : void setCodeFetch(int value);
-  public : int getNetReconf();
-  public : void setNetReconf(int value);
-  public : int getLock();
-  public : int getLogging();
-  public : int getWritten();
-  public : int getIsInitialised();
-  public : int getLightingState();
-  public : int getLightAdmin();
-  public : int getHeatingState();
-  public : int getHeatAdmin();
-  public : int getWateringState();
-  public : int getWateringAdmin();
-  public : int getFanSpeed();
-  public : int getFanAdmin();
+    void printState();
 
-  public : void setLock(int value);
-  public : void setLogging(int value);
-    
-  public : void setWritten(int value);
-  public : void setIsInitialised(int value);
-  public : void setLightingState(int value);
-  public : void setLightAdmin(int value);
-  public : void setHeatingState(int value);
-  public : void setHeatAdmin(int value);
-  public : void setWateringState(int value);
-  public : void setWateringAdmin(int value);
-  public : void setFanSpeed(int value);
-  public : void setFanAdmin(int value);
+    int getCodeFetch();
+    void setCodeFetch(int value);
+    int getNetReconf();
+    void setNetReconf(int value);
+    int getLock();
+    int getLogging();
+    int getWritten();
+    int getIsInitialised();
+    int getLightingState();
+    int getLightAdmin();
+    int getHeatingState();
+    int getHeatAdmin();
+    int getWateringState();
+    int getWateringAdmin();
+    int getFanSpeed();
+    int getFanAdmin();
 
-  public : int getEnumSize();
+    void setLock(int value);
+    void setLogging(int value);
 
-  public : void heatSwitch(int state);
+    void setWritten(int value);
+    void setIsInitialised(int value);
+    void setLightingState(int value);
+    void setLightAdmin(int value);
+    void setHeatingState(int value);
+    void setHeatAdmin(int value);
+    void setWateringState(int value);
+    void setWateringAdmin(int value);
+    void setFanSpeed(int value);
+    void setFanAdmin(int value);
 
-  public : void mainSwitch(int choice);
+    int getEnumSize();
 
-  public : DateTime getTime();
-  public : void updateTime();
+    void heatSwitch(int state);
 
-  public : void tick();
+    void mainSwitch(int choice);
 
-  public : void autoLight();
+    void globalLockEvent();
+    void lightAdminEvent();
+    void lightStateEvent();
+    void heatAdminEvent();
+    void heatStateEvent();
+    void loggingEvent();
+    void wateringAdminEvent();
+    void wateringStateEvent();
+    void measureEvent();
+    void printTimeEvent();
+    void setTimeEvent();
 
-  public : void autoLight(DateTime now);
-    
-  public : void getRemoteInstructions();
+    DateTime getTime();
+    void updateTime();
 
-  public : void update();
-  public : void tick(DateTime now);
-  public : void renewNetwork(bool rewriteDevice);
+    void tick();
 
-  public : void getRemoteInstructions(DateTime now);
+    void autoLight();
 
-  public : void logControl();
+    void autoLight(DateTime now);
+
+    void getRemoteInstructions();
+
+    void update();
+    void tick(DateTime now);
+    void renewNetwork(bool rewriteDevice);
+
+    void getRemoteInstructions(DateTime now);
+
+    void logControl();
+
+    void empty();
+    void test();
+
 };
+
+typedef void (Control::*Event)();
+typedef int (Control::*GetBit)();
+typedef void (Control::*SetBit)(int value);
 
 #endif

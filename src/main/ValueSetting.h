@@ -3,6 +3,8 @@
 
 #include "Setting.h"
 
+class Control;
+
 template <class T>
 class ValueSetting : public Setting{
 
@@ -14,7 +16,7 @@ class ValueSetting : public Setting{
 
   T tempValue;
 
-  ValueSetting(char *title, T *bindValue, Dummy *control, Event event);
+  ValueSetting(char *title, T *bindValue, Control *control, Action *event);
 
   T getValue();
   T getTempValue();
