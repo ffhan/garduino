@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Class Name="PromisePack" Collapsed="true">
+    <Position X="15.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAEAgBAAAAQAAAAAAAABAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Action.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FunctionNode" Collapsed="true">
+    <Position X="13.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAABABAAAAAAAAAAAAAIAAAAAAAIAAAA=</HashCode>
+      <FileName>Action.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FunctionList" Collapsed="true">
+    <Position X="12" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAgAAAAABAgACAIAAABBAAAAAAAAAAAAACAgA=</HashCode>
+      <FileName>Action.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Action" Collapsed="true">
+    <Position X="12" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgAAAAAAAABAAAAEAAAAIAAAAAIAAACAAAAAAAQ=</HashCode>
+      <FileName>Action.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ActionNode" Collapsed="true">
+    <Position X="15.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQAAAAAAAAAABAIAAAAAAAQAAAAgAA=</HashCode>
+      <FileName>ActionBinaryTree.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ActionBinaryTree" Collapsed="true">
+    <Position X="13.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAQAAAAAARAAgQAAAAgAAIAQAAAQACEACAACACAQgA=</HashCode>
+      <FileName>ActionBinaryTree.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BitSetting&lt;T&gt;" Collapsed="true">
+    <Position X="4" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAACAAEAAAAAAAAACIAQAABAAAAAAAgAA=</HashCode>
+      <FileName>BitSetting.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BoolBitSetting" Collapsed="true">
+    <Position X="2.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAIAAAAAAAIAAAABAAAAAAAgAA=</HashCode>
+      <FileName>BoolBitSetting.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BoolSetting" Collapsed="true">
+    <Position X="7.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAgAA=</HashCode>
+      <FileName>BoolSetting.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Control" Collapsed="true">
+    <Position X="17.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CpBiARiEFAMMAmAaANwBODMjAEgAMZMIGIYCGIEFkCA=</HashCode>
+      <FileName>Control.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IntBitSetting" Collapsed="true">
+    <Position X="5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAYAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAgAA=</HashCode>
+      <FileName>IntBitSetting.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IntSetting" Collapsed="true">
+    <Position X="9.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAIAAIAAAAAAAAAgAA=</HashCode>
+      <FileName>IntSetting.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Item" Collapsed="true">
+    <Position X="5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BABEUAEAQAACBFBAAAAAEAgFAQAJAAAABAECAgBBgIA=</HashCode>
+      <FileName>Item.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ItemList" Collapsed="true">
+    <Position X="15.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAQAAgAAAAABAAACAwAIAAAAAAAAAAAAAAAACAgA=</HashCode>
+      <FileName>ItemList.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ItemNode" Collapsed="true">
+    <Position X="17.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAAAAAAIAAAA=</HashCode>
+      <FileName>ItemNode.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Logging" Collapsed="true">
+    <Position X="12" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQBAAAAAABAAAgAAAAAACAAASAAAAAAAAAAAAA=</HashCode>
+      <FileName>Logging.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Measuring" Collapsed="true">
+    <Position X="13.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAIAEAAAAAAIAAAAAAAAAAAIEAAEQAAQAAIAAAIA=</HashCode>
+      <FileName>Measuring.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Menu">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAAQAAAEBAAACAAAACgAAKAAAABAgAAAAAAAA=</HashCode>
+      <FileName>Menu.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Remote" Collapsed="true">
+    <Position X="17.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQCAAAICCAQAAAAAAAAAAAAABEAAggIAAgAQCAAEAA=</HashCode>
+      <FileName>Remote.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Screen" Collapsed="true">
+    <Position X="12" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEAgAAiAAAAJABAAEAACASIFCAABAgiAgABgAA=</HashCode>
+      <FileName>Screen.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Setting" Collapsed="true">
+    <Position X="6.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAEAAAAAAAAAAAAAAAIABAAAAABAAAA=</HashCode>
+      <FileName>Setting.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ValueSetting&lt;T&gt;" Collapsed="true">
+    <Position X="8.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACIAEAAAAAAAAAAIASAABAAAAAAAgAA=</HashCode>
+      <FileName>ValueSetting.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WebController" Collapsed="true">
+    <Position X="13.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AKAjAAIAFoAABAJEAABABiDAKQDAAAADJBhCBADAFMQ=</HashCode>
+      <FileName>WebController.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Typedef Name="Promise" Collapsed="true">
+    <Position X="15.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Action.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Event" Collapsed="true">
+    <Position X="15.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Control.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="GetBit" Collapsed="true">
+    <Position X="17.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Control.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="SetBit" Collapsed="true">
+    <Position X="17.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Control.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="itemType" Collapsed="true">
+    <Position X="1.25" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Item.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Printer" Collapsed="true">
+    <Position X="13.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ItemList.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="__builtin_va_list" Collapsed="true">
+    <Position X="12" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>__vm\.main.vsarduino.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="div_t" Collapsed="true">
+    <Position X="13.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>__vm\.main.vsarduino.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="ldiv_t" Collapsed="true">
+    <Position X="12" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>__vm\.main.vsarduino.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Enum Name="__unnamed_enum_0012_1" Collapsed="true">
+    <Position X="1.25" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAMIAAAAAAAAAAACAAAAAAAAAAAAAAAAAQCAAAQAAA=</HashCode>
+      <FileName>Item.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
