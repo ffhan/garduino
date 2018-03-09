@@ -267,7 +267,51 @@ bool ActionBinaryTree::search(int val)
 
 }
 
+Action *ActionBinaryTree::retrieve(int val)
 
+{
+
+  return retrieve(root, val);
+
+}
+
+Action *ActionBinaryTree::retrieve(ActionNode *r, int val)
+
+{
+
+  Action *found = NULL;
+
+  while ((r != NULL) && !found)
+
+  {
+
+    int rval = r->data->code;
+
+    if (val < rval)
+
+      r = r->left;
+
+    else if (val > rval)
+
+      r = r->right;
+
+    else
+
+    {
+
+      found = r->data;
+
+      break;
+
+    }
+
+    found = retrieve(r, val);
+
+  }
+
+  return found;
+
+}
 
 bool ActionBinaryTree::search(ActionNode *r, int val)
 

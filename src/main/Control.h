@@ -8,6 +8,7 @@ class Remote;
 class Measuring;
 class Logging;
 class ActionBinaryTree;
+class PromisePack;
 
 class Control {
     /*
@@ -49,12 +50,32 @@ class Control {
 
   public :
 
-    Measuring *measure;
-    Logging *logger;
-    Remote *remote;
-    RTC_DS3231 *rtc;
-    WebController *web;
-    ActionBinaryTree *actions;
+    Measuring *measure = NULL;
+    Logging *logger = NULL;
+    Remote *remote = NULL;
+    RTC_DS3231 *rtc = NULL;
+    WebController *web = NULL;
+    ActionBinaryTree *actions = NULL;
+
+    /*
+      void globalLockEvent();
+      void lightAdminEvent();
+      void lightStateEvent();
+      void heatAdminEvent();
+      void heatStateEvent();
+      void loggingEvent();
+      void wateringAdminEvent();
+      void wateringStateEvent();
+      void measureEvent();
+      void printTimeEvent();
+      void setTimeEvent();
+    */
+
+    PromisePack *globalLockPromise = NULL;
+    PromisePack *lightAdminPromise = NULL;
+    PromisePack *heatAdminPromise = NULL;
+    PromisePack *loggingPromise = NULL;
+    PromisePack *wateringAdminPromise = NULL;
 
     Control();
 
@@ -115,20 +136,14 @@ class Control {
     void mainSwitch(int choice);
 
     void globalLockEvent();
-    
     void lightAdminEvent();
     void lightStateEvent();
-    
     void heatAdminEvent();
     void heatStateEvent();
-    
     void loggingEvent();
-    
     void wateringAdminEvent();
     void wateringStateEvent();
-
     void measureEvent();
-
     void printTimeEvent();
     void setTimeEvent();
 

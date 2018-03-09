@@ -6,11 +6,12 @@
 
 using namespace std;
 
-typedef int (*Promise)();
+typedef int (Control::*Promise)();
 
 class PromisePack {
   private:
 
+    Control *sys;
     char *failMessage;
     Promise promise = NULL;
     bool complement;
@@ -51,6 +52,14 @@ class FunctionList {
     int getLen();
 
     void add(PromisePack *promise);
+
+    void add() {}
+
+    template <typename ... Args>
+    void add(PromisePack *event, Args ... args) {
+      add(event);
+      add(args...);
+    }
 
     bool allTrue();
     bool anyTrue();

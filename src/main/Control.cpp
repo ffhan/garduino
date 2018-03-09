@@ -4,6 +4,7 @@
 #include "remote.h"
 #include "Logging.h"
 #include "ActionBinaryTree.h"
+#include "Action.h"
 #include "pins.h"
 
 extern double getDecimalTime(DateTime now);
@@ -21,6 +22,22 @@ Control::Control() {
   remote = new Remote();
   logger = new Logging(this);
   actions = new ActionBinaryTree();
+
+  globalLockPromise = new PromisePack(this, &Control::getLock, "ACCESS DENIED: GLOBAL LOCK ON.", true);
+  lightAdminPromise = new PromisePack(this, &Control::getLightAdmin, "Light access denied: Light admin OFF.");
+  heatAdminPromise = new PromisePack(this, &Control::getHeatAdmin, "Heating access denied: Heating admin OFF.");
+  loggingPromise = new PromisePack(this, &Control::getLogging, "Logging disabled.");
+  wateringAdminPromise = new PromisePack(this, &Control::getWateringAdmin, "Watering access denied: Watering admin OFF.");
+
+  Action *globalLockAction = new Action(this, 0, &Control::globalLockEvent);
+
+  Action *lightAdminAction = new Action(this, 4, &Control::lightAdminEvent);
+  lightAdminAction->addPromises(globalLockPromise);
+
+  Action *lightStateAction = new Action(this, 1, &Control::lightStateEvent);
+  lightStateAction->addPromises(globalLockPromise, lightAdminPromise);
+
+  actions->insert(globalLockAction, lightAdminAction, lightStateAction);
 
   web = new WebController(this);
 }
@@ -213,8 +230,10 @@ void Control::heatSwitch(int state) {
 }
 
 void Control::mainSwitch(int choice) {
+  Action *action = actions->retrieve(choice);
+  if(action) action->execute();
   /*
-  if (getLock()) {
+    if (getLock()) {
     switch (choice) {
 
       case 5:
@@ -228,8 +247,8 @@ void Control::mainSwitch(int choice) {
         return;
     }
     return;
-  }
-  switch (choice) {
+    }
+    switch (choice) {
     case 200:
       web->getMyId();
       return;
@@ -244,7 +263,7 @@ void Control::mainSwitch(int choice) {
         SysCall::halt();
         return;
       }
-    
+
     case 1: // switch for lighting
 
 
@@ -298,7 +317,7 @@ void Control::mainSwitch(int choice) {
       Serial.println(F("Fan admin mode ON."));
       return;
 
-  }
+    }
   */
 }
 

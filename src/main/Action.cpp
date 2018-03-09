@@ -5,17 +5,18 @@ FunctionList::FunctionList(Control *control) {
 }
 
 PromisePack::PromisePack(Control *sys, Promise promise, char *failMessage, bool complement = false) {
+  this->sys = sys;
   this->failMessage = failMessage;
   this->promise = promise;
 }
 
 bool PromisePack::go() {
   if(complement){
-    if(1 - (*promise)()) return true;
+    if(1 - (sys->*promise)()) return true;
     Serial.println(failMessage);
     return false;
   }
-  if ((*promise)()) return true;
+  if ((sys->*promise)()) return true;
   Serial.println(failMessage);
   return false;
 }
