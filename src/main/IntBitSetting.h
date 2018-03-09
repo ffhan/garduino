@@ -11,7 +11,7 @@ class IntBitSetting : public BitSetting<int> {
 
   public:
 
-    IntBitSetting(char *title, Control *control, Event event, GetBit getBit, int code, int range);
+    IntBitSetting(char *title, Control *control, Action *event, GetBit getBit, int range);
 
     void left();
     void right();

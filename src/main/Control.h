@@ -9,6 +9,7 @@ class Measuring;
 class Logging;
 class ActionBinaryTree;
 class PromisePack;
+class Action;
 
 class Control {
     /*
@@ -38,6 +39,7 @@ class Control {
     int _data = 0x0057;
     int fanSpeed_bitsize = 3;
 
+    //printTime probably won't work if this is not set.
     DateTime now;
 
     typedef enum {LOCK = 0, LOGGING = 1, WRITTEN = 2, IS_INITIALISED = 3,
@@ -76,6 +78,11 @@ class Control {
     PromisePack *heatAdminPromise = NULL;
     PromisePack *loggingPromise = NULL;
     PromisePack *wateringAdminPromise = NULL;
+
+    Action *globalLockAction = NULL;
+    Action *lightAdminAction = NULL;
+    Action *lightStateAction = NULL;
+    Action *printTimeAction = NULL;
 
     Control();
 

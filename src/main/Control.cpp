@@ -29,13 +29,15 @@ Control::Control() {
   loggingPromise = new PromisePack(this, &Control::getLogging, "Logging disabled.");
   wateringAdminPromise = new PromisePack(this, &Control::getWateringAdmin, "Watering access denied: Watering admin OFF.");
 
-  Action *globalLockAction = new Action(this, 0, &Control::globalLockEvent);
+  globalLockAction = new Action(this, 0, &Control::globalLockEvent);
 
-  Action *lightAdminAction = new Action(this, 4, &Control::lightAdminEvent);
+  lightAdminAction = new Action(this, 4, &Control::lightAdminEvent);
   lightAdminAction->addPromises(globalLockPromise);
 
-  Action *lightStateAction = new Action(this, 1, &Control::lightStateEvent);
+  lightStateAction = new Action(this, 1, &Control::lightStateEvent);
   lightStateAction->addPromises(globalLockPromise, lightAdminPromise);
+
+  printTimeAction = new Action(this, 8, &Control::printTimeEvent);
 
   actions->insert(globalLockAction, lightAdminAction, lightStateAction);
 
@@ -549,6 +551,7 @@ void Control::getRemoteInstructions(DateTime now) {
 }
 
 void Control::logControl() {
+  /*
   if (now.second() == 0 && (now.hour() % 1 == 0) && ((now.minute() % 30 == 0) || now.minute() == 0)) {
     setWritten(0);
   }
@@ -558,6 +561,7 @@ void Control::logControl() {
   if (now.second() == 0 && now.minute() == 0 && now.hour() == 1) {
     setNetReconf(1);
   }
+  */
 
   if (!getWritten()) {
 

@@ -8,11 +8,12 @@ PromisePack::PromisePack(Control *sys, Promise promise, char *failMessage, bool 
   this->sys = sys;
   this->failMessage = failMessage;
   this->promise = promise;
+  this->complement = complement;
 }
 
 bool PromisePack::go() {
-  if(complement){
-    if(1 - (sys->*promise)()) return true;
+  if (complement) {
+    if (1 - (sys->*promise)()) return true;
     Serial.println(failMessage);
     return false;
   }
@@ -52,7 +53,6 @@ int FunctionList::getLen() {
 
 bool FunctionList::allTrue() {
   if (len == 0) {
-    Serial.println("empty.");
     return true;
   }
 
@@ -79,7 +79,6 @@ bool FunctionList::allTrue() {
 
 bool FunctionList::anyTrue() {
   if (len == 0) {
-    Serial.println("empty.");
     return true;
   }
 

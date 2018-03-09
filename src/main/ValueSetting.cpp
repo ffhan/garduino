@@ -1,7 +1,7 @@
 #include "ValueSetting.h"
 
 template <class T>
-ValueSetting<T>::ValueSetting(char *title, T *bindValue, Control *control, Event event) : Setting(title, control, event){
+ValueSetting<T>::ValueSetting(char *title, T *bindValue, Control *control, Action *event) : Setting(title, control, event){
 	value = bindValue;
 	tempValue = *value;
 }

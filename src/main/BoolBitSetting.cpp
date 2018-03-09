@@ -1,7 +1,7 @@
 #include "BoolBitSetting.h"
 #include "Control.h"
 
-BoolBitSetting::BoolBitSetting(char *title, Control *control, Event event, GetBit getBit, int code) : BitSetting<bool>(title, control, event, getBit, code) {
+BoolBitSetting::BoolBitSetting(char *title, Control *control, Action *event, GetBit getBit) : BitSetting<bool>(title, control, event, getBit) {
   type = BOOLBITSETTING;
 }
 

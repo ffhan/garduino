@@ -94,9 +94,9 @@ void setup() {
 
   Menu *mainMenu = new Menu("Main menu");
 
-  Menu *sysControlMenu = new Menu("System control");
+  Menu *sysControlMenu = new Menu("Settings");
 
-  Menu *commandMenu = new Menu("System commands");
+  Menu *commandMenu = new Menu("Commands");
 
   Menu *lightSettings = new Menu("Light controls");
   Menu *heatSettings = new Menu("Heat controls");
@@ -111,26 +111,29 @@ void setup() {
   //  Con of this approach is that I'm cornering myself into using only mainSwitch.
   //  That's bad design, already messing with me with BoolBitSettings.
 
-  BoolBitSetting *globalLockSetting = new BoolBitSetting("Global lock", sys, &Control::empty, &Control::getLock, 0);
+  BoolBitSetting *globalLockSetting = new BoolBitSetting("Global lock", sys, sys->globalLockAction, &Control::getLock);
 
-  BoolBitSetting *lightAdminSetting = new BoolBitSetting("Light admin", sys, &Control::empty, &Control::getLightAdmin, 4);
-  BoolBitSetting *lightStateSetting = new BoolBitSetting("Light state", sys, &Control::empty, &Control::getLightingState, 1);
+  BoolBitSetting *lightAdminSetting = new BoolBitSetting("Light admin", sys, sys->lightAdminAction, &Control::getLightAdmin);
+  BoolBitSetting *lightStateSetting = new BoolBitSetting("Light state", sys, sys->lightStateAction, &Control::getLightingState);
 
-  BoolBitSetting *heatAdminSetting = new BoolBitSetting("Heating admin", sys, &Control::empty, &Control::getHeatAdmin, 6);
-  BoolBitSetting *heatStateSetting = new BoolBitSetting("Heating state", sys, &Control::empty, &Control::getHeatingState, 3);
+  //BoolBitSetting *heatAdminSetting = new BoolBitSetting("Heating admin", sys, &Control::empty, &Control::getHeatAdmin);
+  //BoolBitSetting *heatStateSetting = new BoolBitSetting("Heating state", sys, &Control::empty, &Control::getHeatingState, 3);
 
-  BoolBitSetting *wateringAdminSetting = new BoolBitSetting("Watering admin", sys, &Control::empty, &Control::getWateringAdmin, 10);
-  BoolBitSetting *wateringStateSetting = new BoolBitSetting("Watering state", sys, &Control::empty, &Control::getWateringState, 7);
+  //BoolBitSetting *wateringAdminSetting = new BoolBitSetting("Watering admin", sys, &Control::empty, &Control::getWateringAdmin, 10);
+  //BoolBitSetting *wateringStateSetting = new BoolBitSetting("Watering state", sys, &Control::empty, &Control::getWateringState, 7);
 
-  BoolBitSetting *fanAdminSetting = new BoolBitSetting("Fan admin", sys, &Control::empty, &Control::getFanAdmin, 11);
-  IntBitSetting *fanSpeedSetting = new IntBitSetting("Fan speed", sys, &Control::empty, &Control::getFanSpeed, 9, 7);
+  //BoolBitSetting *fanAdminSetting = new BoolBitSetting("Fan admin", sys, &Control::empty, &Control::getFanAdmin, 11);
+  //IntBitSetting *fanSpeedSetting = new IntBitSetting("Fan speed", sys, &Control::empty, &Control::getFanSpeed, 9, 7);
 
-  mainMenu->addItems(sysControlMenu);
+  Setting *printTimeCommand = new Setting("Print time", sys, sys->printTimeAction);
+  commandMenu->addItems(printTimeCommand);
+
+  mainMenu->addItems(commandMenu, sysControlMenu);
   sysControlMenu->addItems(globalLockSetting, lightSettings, heatSettings, wateringSettings, fanSettings);
   lightSettings->addItems(lightAdminSetting, lightStateSetting);
-  heatSettings->addItems(heatAdminSetting, heatStateSetting);
-  wateringSettings->addItems(wateringAdminSetting, wateringStateSetting);
-  fanSettings->addItems(fanAdminSetting, fanSpeedSetting);
+  //heatSettings->addItems(heatAdminSetting, heatStateSetting);
+  //wateringSettings->addItems(wateringAdminSetting, wateringStateSetting);
+  //fanSettings->addItems(fanAdminSetting, fanSpeedSetting);
 
   screen = new Screen(16, 2, mainMenu);
 

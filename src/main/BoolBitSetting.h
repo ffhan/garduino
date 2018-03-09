@@ -9,7 +9,7 @@ class BoolBitSetting : public BitSetting<bool> {
 
   public:
 
-    BoolBitSetting(char *title, Control *control, Event event, GetBit getBit, int code);
+    BoolBitSetting(char *title, Control *control, Action *event, GetBit getBit);
 
     void left();
     void right();

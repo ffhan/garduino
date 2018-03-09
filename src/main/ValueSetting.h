@@ -16,7 +16,7 @@ class ValueSetting : public Setting{
 
   T tempValue;
 
-  ValueSetting(char *title, T *bindValue, Control *control, Event event);
+  ValueSetting(char *title, T *bindValue, Control *control, Action *event);
 
   T getValue();
   T getTempValue();

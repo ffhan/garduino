@@ -1,6 +1,6 @@
 #include "IntBitSetting.h"
 
-IntBitSetting::IntBitSetting(char *title, Control *control, Event event, GetBit getBit, int code, int range) : BitSetting<int>(title, control, event, getBit, code){
+IntBitSetting::IntBitSetting(char *title, Control *control, Action *event, GetBit getBit, int range) : BitSetting<int>(title, control, event, getBit){
   this->range = range;
   type = INTBITSETTING;
 }

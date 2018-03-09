@@ -9,7 +9,7 @@ class BoolSetting : public ValueSetting<bool>{
 
   public:
   
-  BoolSetting(char *title, bool *bindValue, Control *control, Event event);
+  BoolSetting(char *title, bool *bindValue, Control *control, Action *event);
   
   void left();
   void right();

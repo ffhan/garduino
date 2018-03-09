@@ -4,15 +4,17 @@
 #include "Item.h"
 #include "Control.h"
 
+class Action;
+
 class Setting : public Item{
   protected:
   
   Control *controller = NULL;
-  Event event = NULL;
+  Action *event = NULL;
 
   public:
 
-  Setting(char *title, Control *control, Event event);
+  Setting(char *title, Control *control, Action *event);
 
   Item *enter();
   
