@@ -50,6 +50,10 @@ build/
 [Bb]in/
 [Oo]bj/
 .vs/
+src/main/[Vv]15/
+src/main/[Dd]ebug/
+src/main/[Rr]elease/
+src/main/__vm
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
