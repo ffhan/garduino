@@ -3,6 +3,9 @@
 
 #include "BitSetting.h"
 
+class Action;
+class Control;
+
 class IntBitSetting : public BitSetting<int> {
 
   private:
@@ -15,6 +18,8 @@ class IntBitSetting : public BitSetting<int> {
 
     void left();
     void right();
+
+	Item *enter();
 
 };
 

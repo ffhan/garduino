@@ -122,8 +122,8 @@ void setup() {
   BoolBitSetting *wateringAdminSetting = new BoolBitSetting("Watering admin", sys, sys->wateringAdminAction, &Control::getWateringAdmin);
   BoolBitSetting *wateringStateSetting = new BoolBitSetting("Watering state", sys, sys->wateringStateAction, &Control::getWateringState);
 
-  //BoolBitSetting *fanAdminSetting = new BoolBitSetting("Fan admin", sys, &Control::empty, &Control::getFanAdmin, 11);
-  //IntBitSetting *fanSpeedSetting = new IntBitSetting("Fan speed", sys, &Control::empty, &Control::getFanSpeed, 9, 7);
+  BoolBitSetting *fanAdminSetting = new BoolBitSetting("Fan admin", sys, sys->fanAdminAction, &Control::getFanAdmin);
+  IntBitSetting *fanSpeedSetting = new IntBitSetting("Fan speed", sys, sys->fanSpeedAction, &Control::getFanSpeed, 7);
 
   Setting *printTimeCommand = new Setting("Print time", sys, sys->printTimeAction);
   commandMenu->addItems(printTimeCommand);
@@ -133,7 +133,7 @@ void setup() {
   lightSettings->addItems(lightAdminSetting, lightStateSetting);
   heatSettings->addItems(heatAdminSetting, heatStateSetting);
   wateringSettings->addItems(wateringAdminSetting, wateringStateSetting);
-  //fanSettings->addItems(fanAdminSetting, fanSpeedSetting);
+  fanSettings->addItems(fanAdminSetting, fanSpeedSetting);
 
   screen = new Screen(16, 2, mainMenu);
 

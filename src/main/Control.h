@@ -78,6 +78,7 @@ class Control {
     PromisePack *heatAdminPromise = NULL;
     PromisePack *loggingPromise = NULL;
     PromisePack *wateringAdminPromise = NULL;
+	PromisePack *fanAdminPromise = NULL;
 
     Action *globalLockAction = NULL;
     
@@ -91,6 +92,9 @@ class Control {
 
 	Action *wateringAdminAction = NULL;
 	Action *wateringStateAction = NULL;
+
+	Action *fanAdminAction = NULL;
+	Action *fanSpeedAction = NULL;
 
     Control();
 
@@ -158,6 +162,8 @@ class Control {
     void loggingEvent();
     void wateringAdminEvent();
     void wateringStateEvent();
+	void fanAdminEvent();
+	void fanStateEvent(int value);
     void measureEvent();
     void printTimeEvent();
     void setTimeEvent();

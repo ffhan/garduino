@@ -69,15 +69,22 @@ class FunctionList {
 class Action {
   private :
 
-    Control *sys;
-    Event event;
-    FunctionList *list;
+    Control *sys = NULL;
+    Event event = NULL;
+    FunctionList *list = NULL;
+
+	SetBit setBit = NULL;
+	int *bindValue = NULL;
 
   public :
 
     int code;
 
     Action(Control *control, int code, Event event);
+	Action(Control *control, int code, SetBit setBit, int *value);
+	Action(Control *control, int code, SetBit setBit);
+
+	void bindToValue(int *value);
 
     void addPromises() {}
 
