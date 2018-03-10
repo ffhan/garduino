@@ -121,6 +121,10 @@ Action::Action(Control *control, int code, SetBit setBit) {
 	this->setBit = setBit;
 }
 
+void Action::bindToRemoteCode(int remoteCode) {
+	this->remoteCode = remoteCode;
+}
+
 void Action::bindToValue(int *value) {
 	bindValue = value;
 }

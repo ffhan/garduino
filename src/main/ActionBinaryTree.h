@@ -60,8 +60,12 @@ class ActionBinaryTree {
 
     bool search(ActionNode *r, int val);
     bool search(int val);
+
     Action *retrieve(int val);
     Action *retrieve(ActionNode *r, int val);
+
+	Action *retrieveRemote(int val);
+	Action *retrieveRemote(ActionNode *r, int val);
 
     void inorder();
     void inorder(ActionNode *r);

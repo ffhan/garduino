@@ -4,8 +4,6 @@
 #include "Arduino.h"
 #include "Control.h"
 
-using namespace std;
-
 typedef int (Control::*Promise)();
 
 class PromisePack {
@@ -79,12 +77,15 @@ class Action {
   public :
 
     int code;
+	int remoteCode;
 
     Action(Control *control, int code, Event event);
 	Action(Control *control, int code, SetBit setBit, int *value);
 	Action(Control *control, int code, SetBit setBit);
 
 	void bindToValue(int *value);
+
+	void bindToRemoteCode(int remoteCode);
 
     void addPromises() {}
 

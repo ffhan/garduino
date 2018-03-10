@@ -313,6 +313,52 @@ Action *ActionBinaryTree::retrieve(ActionNode *r, int val)
 
 }
 
+Action *ActionBinaryTree::retrieveRemote(int val)
+
+{
+
+  return retrieveRemote(root, val);
+
+}
+
+Action *ActionBinaryTree::retrieveRemote(ActionNode *r, int val)
+
+{
+
+  Action *found = NULL;
+
+  while ((r != NULL) && !found)
+
+  {
+
+    int rval = r->data->remoteCode;
+
+    if (val < rval)
+
+      r = r->left;
+
+    else if (val > rval)
+
+      r = r->right;
+
+    else
+
+    {
+
+      found = r->data;
+
+      break;
+
+    }
+
+    found = retrieve(r, val);
+
+  }
+
+  return found;
+
+}
+
 bool ActionBinaryTree::search(ActionNode *r, int val)
 
 {
