@@ -106,7 +106,7 @@ void Logging::logData(DateTime now, Measuring *measure) {
 	  }
 
 	  Serial.println(F("done."));*/
-	//sys->web->postEntry();
+	sys->web->postEntry();
 }
 
 char *Logging::soilCondition(int soilValue) {

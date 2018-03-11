@@ -63,9 +63,13 @@ Control::Control() {
 
 	measureAction = new Action(this, 5, &Control::measureEvent);
 
+	renewNetAction = new Action(this, 400, &Control::renewNetEvent);
+	renewNetAction->addPromises(globalLockPromise);
+
 	actions->insert(
 		globalLockAction, lightAdminAction, lightStateAction,
-		heatAdminAction, heatStateAction, fanAdminAction, fanSpeedAction, printTimeAction, measureAction);
+		heatAdminAction, heatStateAction, fanAdminAction, fanSpeedAction, 
+		printTimeAction, measureAction, renewNetAction);
 
 	web = new WebController(this);
 }
@@ -277,6 +281,10 @@ void Control::mainSwitch(int choice) {
 	  case 500:
 		return;
 	*/
+}
+
+void Control::renewNetEvent() {
+	renewNetwork(true);
 }
 
 void Control::globalLockEvent() {
@@ -513,15 +521,15 @@ void Control::logControl() {
 	}
 
 	if (getCodeFetch()) {
-		//int code = web->getCode();
-		//mainSwitch(code);
-		//if (code != 500) web->completeCode();
+		int code = web->getCode();
+		mainSwitch(code);
+		if (code != 500) web->completeCode();
 		setCodeFetch(0);
-		//web->updateState();
+		web->updateState();
 	}
 
 	if (getNetReconf()) {
-		//renewNetwork(false);
+		renewNetwork(false);
 	}
 
 }

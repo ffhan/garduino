@@ -99,6 +99,8 @@ public:
 	Action *fanAdminAction = NULL;
 	Action *fanSpeedAction = NULL;
 
+	Action *renewNetAction = NULL;
+
 	Control();
 
 private: int readPosition(int posit);
@@ -170,6 +172,8 @@ public:
 	void measureEvent();
 	void printTimeEvent();
 	void setTimeEvent();
+
+	void renewNetEvent();
 
 	DateTime getTime();
 	void updateTime();

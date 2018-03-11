@@ -24,32 +24,6 @@
 #include "Screen.h"
 #include "Action.h"
 
-/*
-  const int lightControlPin = 6;
-  const int SensorPowerPin = 2;
-  const int humiditySensorReadPin = A1;
-*/
-
-//const char header[] = "DateTime stamp;Soil moisture;Soil description;Air humidity;Air temperature;Light On/Off;Soil moisture STD;Air humidity STD;Air temperature STD\0";
-
-//#define FILE_BASE_NAME "logger" //log file base name.
-//#define error(msg) sd.errorHalt(F(msg)) // error messages stored in flash.
-
-//SDFat setup
-//const uint8_t chipSelect = 4;
-//SdFat sd; // File system object.
-//SdFile file; // Log file.
-/*
-  IRrecv irrecv(IR_PIN);
-  decode_results results;
-
-  RTC_DS3231 rtc;
-
-  DHT dht(DHTPIN, DHTTYPE);
-*/
-
-//char fileName[13];
-
 const int measureNumber = 5;
 
 int getFreeRam()
@@ -98,6 +72,8 @@ void setup() {
 
 	Menu *commandMenu = new Menu("Commands");
 
+	Menu *netCommandMenu = new Menu("Network");
+
 	Menu *lightSettings = new Menu("Light controls");
 	Menu *heatSettings = new Menu("Heat controls");
 	Menu *wateringSettings = new Menu("Watering controls");
@@ -127,7 +103,11 @@ void setup() {
 
 	Setting *printTimeCommand = new Setting("Print time", sys, sys->printTimeAction);
 	Setting *measureCommand = new Setting("Measure", sys, sys->measureAction);
-	commandMenu->addItems(measureCommand, printTimeCommand);
+
+	Setting *renewNetCommand = new Setting("Renew net", sys, sys->renewNetAction);
+	netCommandMenu->addItems(renewNetCommand);
+
+	commandMenu->addItems(measureCommand, printTimeCommand, netCommandMenu);
 
 	mainMenu->addItems(commandMenu, sysControlMenu);
 	sysControlMenu->addItems(globalLockSetting, lightSettings, heatSettings, wateringSettings, fanSettings);
