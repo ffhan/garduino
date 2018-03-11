@@ -66,10 +66,16 @@ Control::Control() {
 	renewNetAction = new Action(this, 400, &Control::renewNetEvent);
 	renewNetAction->addPromises(globalLockPromise);
 
+	loginAction = new Action(this, 401, &Control::loginEvent);
+	loginAction->addPromises(globalLockPromise);
+
+	getIdAction = new Action(this, 402, &Control::getIdEvent);
+	getIdAction->addPromises(globalLockPromise);
+
 	actions->insert(
 		globalLockAction, lightAdminAction, lightStateAction,
 		heatAdminAction, heatStateAction, fanAdminAction, fanSpeedAction, 
-		printTimeAction, measureAction, renewNetAction);
+		printTimeAction, measureAction, renewNetAction, loginAction, getIdAction);
 
 	web = new WebController(this);
 }
@@ -285,6 +291,14 @@ void Control::mainSwitch(int choice) {
 
 void Control::renewNetEvent() {
 	renewNetwork(true);
+}
+
+void Control::loginEvent() {
+	web->login();
+}
+
+void Control::getIdEvent() {
+	web->getMyId();
 }
 
 void Control::globalLockEvent() {

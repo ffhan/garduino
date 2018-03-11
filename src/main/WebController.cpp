@@ -110,7 +110,7 @@ int WebController::buildEntryJson(Fragmentor fp, Fragmentor tp, EProcessor ep, F
 
 
 	len += (this->*fp)(entry3); //soil description
-	len += (this->*tp)((const char *) soilDescription);
+	len += (this->*tp)((const char *)soilDescription);
 
 	len += (this->*fp)(entry4); //air humidity
 	len += (this->*flp)(airHumidity);
@@ -123,7 +123,7 @@ int WebController::buildEntryJson(Fragmentor fp, Fragmentor tp, EProcessor ep, F
 	else len += (this->*tp)("false");
 
 	len += (this->*fp)(entry7); //device ID
-	len += (this->*ep)(460); //get device ID from EEPROM
+	len += (this->*ep)(deviceIdPosition); //get device ID from EEPROM
 	len += (this->*fp)(entry8);
 	//Serial.println(len);
 
@@ -155,7 +155,7 @@ int WebController::floatLen(float value) {
 void WebController::buildGetCodeRoute(char *route) {
 	int index = 0;
 	index += this->dumpFragment(codeGetFrnt, route);
-	index += this->dumpEeprom(460, route + index);
+	index += this->dumpEeprom(deviceIdPosition, route + index);
 	index += this->dumpFragment(codeGetBack, route + index);
 	route[index - 2] = '\r';
 	route[index - 1] = '\n';
@@ -164,7 +164,7 @@ void WebController::buildGetCodeRoute(char *route) {
 void WebController::buildUpdateStateRoute(char *route) {
 	int index = 0;
 	index += this->dumpFragment(updateFrnt, route);
-	index += this->dumpEeprom(460, route + index);
+	index += this->dumpEeprom(deviceIdPosition, route + index);
 	index += this->dumpFragment(updateBack, route + index);
 	route[index - 2] = '\r';
 	route[index - 1] = '\n';
@@ -218,7 +218,7 @@ int WebController::buildCodeJson(Fragmentor fp, Fragmentor tp, EProcessor ep, Da
 	//Serial.println(len);
 	len += (this->*fp)(code2);
 	//Serial.println(len);
-	len += (this->*ep)(460); //460 is the device Id address.
+	len += (this->*ep)(deviceIdPosition); //the device Id address.
 	//Serial.println(len);
 	len += (this->*fp)(code3);
 	//Serial.println(len);
@@ -427,7 +427,7 @@ void WebController::getter(const char *route, bool staticPath) {
 void WebController::writePostContent() {
 	this->writeFragment(contLen);
 	DateTime now = sys->rtc->now();
-	
+
 	int len = this->buildEntryJson(&fragmentLen, &valueLen, &eepromLen, &floatLen, sys->getTime(), sys->measure->soilMoisture,
 		sys->logger->soilCondition(sys->measure->soilMoisture), sys->measure->humidity, sys->measure->temperature, sys->getLightingState());
 	client.print(len);
@@ -482,7 +482,6 @@ void WebController::writeContent(char *json) {
 void WebController::poster(const char *route, bool writeToken, ContentWriter cw, bool staticPath) {
 	if (connectToServ() > 0) {
 		this->printMakeHttp();
-
 		if (!staticPath) this->writeRoute(route);
 		else this->writeStaticRoute(route);
 		this->writeHost();
@@ -503,8 +502,8 @@ void WebController::poster(const char *route, bool writeToken, ContentWriter cw,
 void WebController::getMyId() { //working
 
 	this->getter(nameCall, false);
-	this->parseResponse(minPhrs, minPhrs, (int*)NULL, true, false, 460);
-	this->printEeprom(460);
+	this->parseResponse(minPhrs, minPhrs, (int*)NULL, true, false, deviceIdPosition);
+	this->printEeprom(deviceIdPosition);
 }
 
 int WebController::getCode() { //working
@@ -514,20 +513,21 @@ int WebController::getCode() { //working
 	this->getter(route, true);
 	/*
 	   Http response parser. If it screws something up it shouldn't screw up EEPROM values.
-	   If it does, it'll screw up deviceId storage (460-496)
+	   If it does, it'll screw up deviceId storage (600++)
 	   As long as code address exists parser won't write to EEPROM.
 	*/
-	this->parseResponse(actnFrnt, actnBack, &code, false, false, 460);
+	this->parseResponse(actnFrnt, actnBack, &code, false, false, deviceIdPosition);
 	//Serial.print("I parsed this: ");
 	Serial.println(code);
 	return code;
 }
 
 void WebController::login() { //working
-  //COMMENT OUT EEPROM PUT!
-  //EEPROM.put(0, "Authorization: Bearer ");
+	//COMMENT THIS OUT IF AUTHORIZATION: BEARER GETS DELETED.
+	EEPROM.put(0, "Authorization: Bearer ");
 	this->poster(loginPath, false, &(this->writeLoginContent), false);
-	this->parseResponse(minPhrs, minPhrs, (int*)NULL, true, true, 22); //store token between " and " to EEPROM address 0+. Start from address 22 because Authorization_token takes that amount of space
+	
+	this->parseResponse(minPhrs, minPhrs, (int*)NULL, true, true, jwtPosition); //store token between " and " to EEPROM address 0+. Start from address 22 because Authorization_token takes that amount of space
 }
 
 void WebController::completeCode() { //working
@@ -623,9 +623,7 @@ void WebController::parseResponse(const char *before, const char *after, int *ac
 	if (!eepromWrite) {
 		Serial.println(strLen(actStrg));
 		if (strLen(actStrg) != 0) {
-			Serial.println("entered");
 			*action = atoi(actStrg);
-			Serial.println("exited");
 		}
 		else *action = 500;
 	}

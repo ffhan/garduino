@@ -105,7 +105,12 @@ void setup() {
 	Setting *measureCommand = new Setting("Measure", sys, sys->measureAction);
 
 	Setting *renewNetCommand = new Setting("Renew net", sys, sys->renewNetAction);
-	netCommandMenu->addItems(renewNetCommand);
+	Setting *loginCommand = new Setting("Login", sys, sys->loginAction);
+	Setting *getIdCommand = new Setting("Get ID", sys, sys->getIdAction);
+
+	netCommandMenu->addItems(loginCommand, getIdCommand, renewNetCommand);
+
+	
 
 	commandMenu->addItems(measureCommand, printTimeCommand, netCommandMenu);
 

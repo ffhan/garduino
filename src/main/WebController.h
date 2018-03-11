@@ -14,6 +14,9 @@ private:
 	Control * sys;
 	EthernetClient client;
 
+	const int jwtPosition = 22;
+	const int deviceIdPosition = 600;
+
 	typedef int (WebController::*Fragmentor) (const char *fragment);
 	typedef int (WebController::*EProcessor) (int index);
 	typedef void (WebController::*ContentWriter)();

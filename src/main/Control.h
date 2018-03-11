@@ -100,6 +100,8 @@ public:
 	Action *fanSpeedAction = NULL;
 
 	Action *renewNetAction = NULL;
+	Action *loginAction = NULL;
+	Action *getIdAction = NULL;
 
 	Control();
 
@@ -174,6 +176,8 @@ public:
 	void setTimeEvent();
 
 	void renewNetEvent();
+	void loginEvent();
+	void getIdEvent();
 
 	DateTime getTime();
 	void updateTime();
