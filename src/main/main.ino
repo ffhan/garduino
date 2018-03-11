@@ -136,6 +136,9 @@ void setup() {
 	digitalWrite(LOGGING_LED, HIGH);
 
 	sys->logger->printHeader();
+
+	screen->show();
+
 	Serial.println(F("Setup complete!"));
 
 }

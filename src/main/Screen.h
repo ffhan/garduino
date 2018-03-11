@@ -8,6 +8,8 @@
 //#include "Setting.h"
 #include "Menu.h"
 
+class LiquidCrystal;
+
 class Screen{
   
   private : 
@@ -22,6 +24,8 @@ class Screen{
   byte rows, cols;
   Menu *mainMenu = NULL;
   Item *currentItem = NULL;
+
+  LiquidCrystal *lcd = NULL;
 
   /*
    * cursorPosition is the position on the screen. It's dictated by the screen size.

@@ -17,9 +17,9 @@ Control::Control() {
 		while (1);
 	}
 
-  //rtc->adjust(DateTime(F(__DATE__), F(__TIME__)));
+	//rtc->adjust(DateTime(F(__DATE__), F(__TIME__)));
 
-  updateTime();
+	updateTime();
 
 	Serial.println(F("done."));
 
@@ -74,10 +74,11 @@ Control::Control() {
 
 	actions->insert(
 		globalLockAction, lightAdminAction, lightStateAction,
-		heatAdminAction, heatStateAction, fanAdminAction, fanSpeedAction, 
+		heatAdminAction, heatStateAction, fanAdminAction, fanSpeedAction,
 		printTimeAction, measureAction, renewNetAction, loginAction, getIdAction);
 
 	web = new WebController(this);
+
 }
 
 int Control::readPosition(int posit) {
@@ -278,15 +279,15 @@ void Control::mainSwitch(int choice) {
 		action->execute();
 	}
 	else { Serial.print(choice); Serial.print(" "); Serial.println("Action not supported."); }
-/*
-	  case 200:
-		web->getMyId();
-		return;
-	  case 420:
-		renewNetwork(true);
-	  case 500:
-		return;
-	*/
+	/*
+		  case 200:
+			web->getMyId();
+			return;
+		  case 420:
+			renewNetwork(true);
+		  case 500:
+			return;
+		*/
 }
 
 void Control::renewNetEvent() {
@@ -475,11 +476,11 @@ void Control::update() {
 	remote->readRemote();
 	remote->onTick();
 	getRemoteInstructions();
-  
+
 	autoLight();
 	tick();
 	logControl();
-  
+
 }
 
 void Control::renewNetwork(bool rewriteDevice) {
@@ -514,17 +515,17 @@ void Control::getRemoteInstructions() {
 }
 
 void Control::logControl() {
-	
+
 	if (now->second() == 0 && (now->hour() % 1 == 0) && ((now->minute() % 30 == 0) || now->minute() == 0)) {
-	  setWritten(0);
+		setWritten(0);
 	}
 	if (now->second() == 30 && now->minute() % 1 == 0) {
-	  setCodeFetch(1);
+		setCodeFetch(1);
 	}
 	if (now->second() == 0 && now->minute() == 0 && now->hour() == 1) {
-	  setNetReconf(1);
+		setNetReconf(1);
 	}
-	
+
 
 	if (!getWritten()) {
 
@@ -555,7 +556,7 @@ void Control::test() {
 	Serial.println("TESTING");
 }
 
-void Control::bindScreenToRemote(Screen *screen){
-  remote->bindScreen(screen);
+void Control::bindScreenToRemote(Screen *screen) {
+	remote->bindScreen(screen);
 }
 
