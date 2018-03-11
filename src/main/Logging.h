@@ -8,20 +8,20 @@ class WebController;
 
 class Logging {
 
-  private:
+private:
 
-    Control *sys;
-  
-  public:
+	Control * sys;
 
-    //void initSD();
-    void writeHeader();
-    void printHeader();
-    void logData(DateTime now, Measuring *measure);
-    char *soilCondition(int soilValue);
-    void printTime(DateTime now);
+public:
 
-    Logging(Control *sys);
+	//void initSD();
+	void writeHeader();
+	void printHeader();
+	void logData(DateTime now, Measuring *measure);
+	char *soilCondition(int soilValue);
+	void printTime(DateTime now);
+
+	Logging(Control *sys);
 };
 
 #endif

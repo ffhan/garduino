@@ -54,146 +54,147 @@ const int measureNumber = 5;
 
 int getFreeRam()
 {
-  extern int __heap_start, *__brkval;
-  int v;
+	extern int __heap_start, *__brkval;
+	int v;
 
-  v = (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+	v = (int)&v - (__brkval == 0 ? (int)&__heap_start : (int)__brkval);
 
-  Serial.print("Free RAM = ");
-  Serial.println(v, DEC);
+	Serial.print("Free RAM = ");
+	Serial.println(v, DEC);
 
-  return v;
+	return v;
 }
 
-Control *sys = (Control *) malloc(sizeof(Control));
-Screen *screen = (Screen*) malloc(sizeof(Screen));
+Control *sys = (Control *)malloc(sizeof(Control));
+Screen *screen = (Screen*)malloc(sizeof(Screen));
 
 double getDecimalTime(DateTime now) {
-  return (double)now.hour() + ((double)now.minute()) / ((double)60.0) + ((double)now.second()) / ((double)3600.0);
+	return (double)now.hour() + ((double)now.minute()) / ((double)60.0) + ((double)now.second()) / ((double)3600.0);
 }
 
-Action *action = (Action *) malloc(sizeof(Action));
+Action *action = (Action *)malloc(sizeof(Action));
 
 void setup() {
-  // put your setup code here, to run once:
+	// put your setup code here, to run once:
 
-  Serial.begin(9600);
-  /*
-    logger.initSD();
-    Serial.println(F("Initialising SD card reader done."));
-  */
-  /*// Wait for USB Serial
-    while (!Serial && millis() < 4000) {
-    SysCall::yield();
-    }*/
+	Serial.begin(9600);
+	/*
+	  logger.initSD();
+	  Serial.println(F("Initialising SD card reader done."));
+	*/
+	/*// Wait for USB Serial
+	  while (!Serial && millis() < 4000) {
+	  SysCall::yield();
+	  }*/
 
-  pinMode(4, OUTPUT);
-  digitalWrite(4, HIGH);
+	pinMode(4, OUTPUT);
+	digitalWrite(4, HIGH);
 
-  sys = new Control();
+	sys = new Control();
 
-  Menu *mainMenu = new Menu("Main menu");
+	Menu *mainMenu = new Menu("Main menu");
 
-  Menu *sysControlMenu = new Menu("Settings");
+	Menu *sysControlMenu = new Menu("Settings");
 
-  Menu *commandMenu = new Menu("Commands");
+	Menu *commandMenu = new Menu("Commands");
 
-  Menu *lightSettings = new Menu("Light controls");
-  Menu *heatSettings = new Menu("Heat controls");
-  Menu *wateringSettings = new Menu("Watering controls");
-  Menu *fanSettings = new Menu("Fan settings");
+	Menu *lightSettings = new Menu("Light controls");
+	Menu *heatSettings = new Menu("Heat controls");
+	Menu *wateringSettings = new Menu("Watering controls");
+	Menu *fanSettings = new Menu("Fan settings");
 
-  //  Setting *measureCommand = new Setting("Measure", sys, Control::
-  //  currently not able to execute commands unless through mainSwitch.
-  //  The current system is messy. I want to delegate everything through the mainSwitch,
-  //  because dealing with an enormous amount of member functions just to evade adding
-  //  int code in settings by default increases system complication.
-  //  Con of this approach is that I'm cornering myself into using only mainSwitch.
-  //  That's bad design, already messing with me with BoolBitSettings.
+	//  Setting *measureCommand = new Setting("Measure", sys, Control::
+	//  currently not able to execute commands unless through mainSwitch.
+	//  The current system is messy. I want to delegate everything through the mainSwitch,
+	//  because dealing with an enormous amount of member functions just to evade adding
+	//  int code in settings by default increases system complication.
+	//  Con of this approach is that I'm cornering myself into using only mainSwitch.
+	//  That's bad design, already messing with me with BoolBitSettings.
 
-  BoolBitSetting *globalLockSetting = new BoolBitSetting("Global lock", sys, sys->globalLockAction, &Control::getLock);
+	BoolBitSetting *globalLockSetting = new BoolBitSetting("Global lock", sys, sys->globalLockAction, &Control::getLock);
 
-  BoolBitSetting *lightAdminSetting = new BoolBitSetting("Light admin", sys, sys->lightAdminAction, &Control::getLightAdmin);
-  BoolBitSetting *lightStateSetting = new BoolBitSetting("Light state", sys, sys->lightStateAction, &Control::getLightingState);
+	BoolBitSetting *lightAdminSetting = new BoolBitSetting("Light admin", sys, sys->lightAdminAction, &Control::getLightAdmin);
+	BoolBitSetting *lightStateSetting = new BoolBitSetting("Light state", sys, sys->lightStateAction, &Control::getLightingState);
 
-  BoolBitSetting *heatAdminSetting = new BoolBitSetting("Heating admin", sys, sys->heatAdminAction, &Control::getHeatAdmin);
-  BoolBitSetting *heatStateSetting = new BoolBitSetting("Heating state", sys, sys->heatStateAction, &Control::getHeatingState);
+	BoolBitSetting *heatAdminSetting = new BoolBitSetting("Heating admin", sys, sys->heatAdminAction, &Control::getHeatAdmin);
+	BoolBitSetting *heatStateSetting = new BoolBitSetting("Heating state", sys, sys->heatStateAction, &Control::getHeatingState);
 
-  BoolBitSetting *wateringAdminSetting = new BoolBitSetting("Watering admin", sys, sys->wateringAdminAction, &Control::getWateringAdmin);
-  BoolBitSetting *wateringStateSetting = new BoolBitSetting("Watering state", sys, sys->wateringStateAction, &Control::getWateringState);
+	BoolBitSetting *wateringAdminSetting = new BoolBitSetting("Watering admin", sys, sys->wateringAdminAction, &Control::getWateringAdmin);
+	BoolBitSetting *wateringStateSetting = new BoolBitSetting("Watering state", sys, sys->wateringStateAction, &Control::getWateringState);
 
-  BoolBitSetting *fanAdminSetting = new BoolBitSetting("Fan admin", sys, sys->fanAdminAction, &Control::getFanAdmin);
-  IntBitSetting *fanSpeedSetting = new IntBitSetting("Fan speed", sys, sys->fanSpeedAction, &Control::getFanSpeed, 7);
+	BoolBitSetting *fanAdminSetting = new BoolBitSetting("Fan admin", sys, sys->fanAdminAction, &Control::getFanAdmin);
+	IntBitSetting *fanSpeedSetting = new IntBitSetting("Fan speed", sys, sys->fanSpeedAction, &Control::getFanSpeed, 7);
 
-  Setting *printTimeCommand = new Setting("Print time", sys, sys->printTimeAction);
-  commandMenu->addItems(printTimeCommand);
+	Setting *printTimeCommand = new Setting("Print time", sys, sys->printTimeAction);
+	Setting *measureCommand = new Setting("Measure", sys, sys->measureAction);
+	commandMenu->addItems(measureCommand, printTimeCommand);
 
-  mainMenu->addItems(commandMenu, sysControlMenu);
-  sysControlMenu->addItems(globalLockSetting, lightSettings, heatSettings, wateringSettings, fanSettings);
-  lightSettings->addItems(lightAdminSetting, lightStateSetting);
-  heatSettings->addItems(heatAdminSetting, heatStateSetting);
-  wateringSettings->addItems(wateringAdminSetting, wateringStateSetting);
-  fanSettings->addItems(fanAdminSetting, fanSpeedSetting);
+	mainMenu->addItems(commandMenu, sysControlMenu);
+	sysControlMenu->addItems(globalLockSetting, lightSettings, heatSettings, wateringSettings, fanSettings);
+	lightSettings->addItems(lightAdminSetting, lightStateSetting);
+	heatSettings->addItems(heatAdminSetting, heatStateSetting);
+	wateringSettings->addItems(wateringAdminSetting, wateringStateSetting);
+	fanSettings->addItems(fanAdminSetting, fanSpeedSetting);
 
-  screen = new Screen(16, 2, mainMenu);
-  sys->bindScreenToRemote(screen);
+	screen = new Screen(16, 2, mainMenu);
+	sys->bindScreenToRemote(screen);
 
-  pinMode(lightControlPin, OUTPUT); // Control light control pin as output
-  pinMode(SensorPowerPin, OUTPUT); // Control humidity sensor power as output
-  pinMode(humiditySensorReadPin, INPUT); // Get data from humidity sensor
-  pinMode(HEATPIN, OUTPUT);
-  pinMode(IR_PIN, INPUT);
-  pinMode(LOGGING_LED, OUTPUT);
-  pinMode(RgbControlPin, OUTPUT);
-  pinMode(rGbControlPin, OUTPUT);
+	pinMode(lightControlPin, OUTPUT); // Control light control pin as output
+	pinMode(SensorPowerPin, OUTPUT); // Control humidity sensor power as output
+	pinMode(humiditySensorReadPin, INPUT); // Get data from humidity sensor
+	pinMode(HEATPIN, OUTPUT);
+	pinMode(IR_PIN, INPUT);
+	pinMode(LOGGING_LED, OUTPUT);
+	pinMode(RgbControlPin, OUTPUT);
+	pinMode(rGbControlPin, OUTPUT);
 
-  digitalWrite(LOGGING_LED, HIGH);
+	digitalWrite(LOGGING_LED, HIGH);
 
-  sys->logger->printHeader();
-  Serial.println(F("Setup complete!"));
+	sys->logger->printHeader();
+	Serial.println(F("Setup complete!"));
 
 }
 
 void loop() {
 
-  bool typed = false;
-  while (Serial.available()) {
-    int choice = Serial.parseInt();
-    if (!typed) {
-      Serial.println(choice);
-      switch (choice) {
-        case 8:
-          screen->up();
-          break;
-        case 2:
-          screen->down();
-          break;
-        case 5:
-          screen->enter();
-          break;
-        case 3:
-          screen->back();
-          break;
-        case 4:
-          screen->left();
-          break;
-        case 6:
-          screen->right();
-          break;
-      }
-      //screen->flash(&printItem);
+	bool typed = false;
+	while (Serial.available()) {
+		int choice = Serial.parseInt();
+		if (!typed) {
+			Serial.println(choice);
+			switch (choice) {
+			case 8:
+				screen->up();
+				break;
+			case 2:
+				screen->down();
+				break;
+			case 5:
+				screen->enter();
+				break;
+			case 3:
+				screen->back();
+				break;
+			case 4:
+				screen->left();
+				break;
+			case 6:
+				screen->right();
+				break;
+			}
+			//screen->flash(&printItem);
 
-      //screen->show();
-      typed = true;
-    }
-  }
-  /*
-    while (Serial.available())
-    {
-    int choice = Serial.parseInt();
-    sys->mainSwitch(choice);
-    }
-  */
-  sys->update();
+			//screen->show();
+			typed = true;
+		}
+	}
+	/*
+	  while (Serial.available())
+	  {
+	  int choice = Serial.parseInt();
+	  sys->mainSwitch(choice);
+	  }
+	*/
+	sys->update();
 }
 

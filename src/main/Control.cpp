@@ -61,9 +61,11 @@ Control::Control() {
 	fanSpeedAction = new Action(this, 9, &Control::fanStateEvent);
 	fanSpeedAction->addPromises(globalLockPromise, fanAdminPromise);
 
+	measureAction = new Action(this, 5, &Control::measureEvent);
+
 	actions->insert(
 		globalLockAction, lightAdminAction, lightStateAction,
-		heatAdminAction, heatStateAction, fanAdminAction, fanSpeedAction);
+		heatAdminAction, heatStateAction, fanAdminAction, fanSpeedAction, printTimeAction, measureAction);
 
 	web = new WebController(this);
 }
@@ -262,24 +264,11 @@ void Control::heatSwitch(int state) {
 
 void Control::mainSwitch(int choice) {
 	Action *action = actions->retrieve(choice);
-	if (action) action->execute();
-	/*
-	  if (getLock()) {
-	  switch (choice) {
-
-		case 5:
-		  if (getLogging()) logger->logData(now, measure);
-		  else Serial.println(F("Didn't write, that's what you wanted, right?"));
-		case 0:
-
-		  return;
-		default:
-		  Serial.println(F("ACCESS DENIED: GLOBAL LOCK ON."));
-		  return;
-	  }
-	  return;
-	  }
-	  switch (choice) {
+	if (action != NULL) {
+		action->execute();
+	}
+	else { Serial.print(choice); Serial.print(" "); Serial.println("Action not supported."); }
+/*
 	  case 200:
 		web->getMyId();
 		return;
@@ -287,68 +276,6 @@ void Control::mainSwitch(int choice) {
 		renewNetwork(true);
 	  case 500:
 		return;
-	  /*
-		case 12345: { // like SWI 12345
-		  file.close();
-		  Serial.println(F("Done"));
-		  SysCall::halt();
-		  return;
-		}
-
-	  case 1: // switch for lighting
-
-
-	  case 3:
-		if (!getHeatAdmin()) {
-		  Serial.println(F("Heating access denied: Heat admin mode OFF."));
-		  return;
-		}
-
-
-	  case 4:
-
-
-	  case 5: {
-		  if (getLogging()) logger->logData(now, measure);
-		  else Serial.println(F("Didn't write, that's what you wanted, right?"));
-		  return;
-		}
-
-	  case 6:
-
-
-	  case 7:
-		if (!getWateringAdmin()) {
-		  Serial.println(F("Watering access denied: Watering admin mode OFF."));
-		  return;
-		}
-
-
-	  case 8:
-
-		return;
-
-	  case 9: // TODO: FAN SPEED SET
-		Serial.println("This implementation is wrong because it doesn't take fan admin into account");
-		return;
-
-	  case 10:
-
-
-	  case 0:
-
-
-	  case 11: //TODO: FAN ADMIN
-		if (getFanAdmin()) {
-		  setFanAdmin(0);
-		  Serial.println(F("Fan admin mode OFF."));
-		  return;
-		}
-		setFanAdmin(1);
-		Serial.println(F("Fan admin mode ON."));
-		return;
-
-	  }
 	*/
 }
 
@@ -560,6 +487,7 @@ void Control::renewNetwork(bool rewriteDevice) {
 void Control::getRemoteInstructions() {
 	byte instr = remote->getInstruction();
 	if (instr == remote->getErrorCode()) return;
+	Serial.println(instr);
 	mainSwitch(remote->getInstruction());
 }
 
