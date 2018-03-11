@@ -5,6 +5,7 @@
 #include "Logging.h"
 #include "ActionBinaryTree.h"
 #include "Action.h"
+#include "Screen.h"
 #include "pins.h"
 
 extern double getDecimalTime(DateTime now);
@@ -16,10 +17,14 @@ Control::Control() {
 		while (1);
 	}
 
+  //rtc->adjust(DateTime(F(__DATE__), F(__TIME__)));
+
+  updateTime();
+
 	Serial.println(F("done."));
 
 	measure = new Measuring();
-	remote = new Remote();
+	remote = new Remote(this);
 	logger = new Logging(this);
 	actions = new ActionBinaryTree();
 
@@ -56,9 +61,11 @@ Control::Control() {
 	fanSpeedAction = new Action(this, 9, &Control::fanStateEvent);
 	fanSpeedAction->addPromises(globalLockPromise, fanAdminPromise);
 
+	measureAction = new Action(this, 5, &Control::measureEvent);
+
 	actions->insert(
 		globalLockAction, lightAdminAction, lightStateAction,
-		heatAdminAction, heatStateAction, fanAdminAction, fanSpeedAction);
+		heatAdminAction, heatStateAction, fanAdminAction, fanSpeedAction, printTimeAction, measureAction);
 
 	web = new WebController(this);
 }
@@ -257,24 +264,11 @@ void Control::heatSwitch(int state) {
 
 void Control::mainSwitch(int choice) {
 	Action *action = actions->retrieve(choice);
-	if (action) action->execute();
-	/*
-	  if (getLock()) {
-	  switch (choice) {
-
-		case 5:
-		  if (getLogging()) logger->logData(now, measure);
-		  else Serial.println(F("Didn't write, that's what you wanted, right?"));
-		case 0:
-
-		  return;
-		default:
-		  Serial.println(F("ACCESS DENIED: GLOBAL LOCK ON."));
-		  return;
-	  }
-	  return;
-	  }
-	  switch (choice) {
+	if (action != NULL) {
+		action->execute();
+	}
+	else { Serial.print(choice); Serial.print(" "); Serial.println("Action not supported."); }
+/*
 	  case 200:
 		web->getMyId();
 		return;
@@ -282,68 +276,6 @@ void Control::mainSwitch(int choice) {
 		renewNetwork(true);
 	  case 500:
 		return;
-	  /*
-		case 12345: { // like SWI 12345
-		  file.close();
-		  Serial.println(F("Done"));
-		  SysCall::halt();
-		  return;
-		}
-
-	  case 1: // switch for lighting
-
-
-	  case 3:
-		if (!getHeatAdmin()) {
-		  Serial.println(F("Heating access denied: Heat admin mode OFF."));
-		  return;
-		}
-
-
-	  case 4:
-
-
-	  case 5: {
-		  if (getLogging()) logger->logData(now, measure);
-		  else Serial.println(F("Didn't write, that's what you wanted, right?"));
-		  return;
-		}
-
-	  case 6:
-
-
-	  case 7:
-		if (!getWateringAdmin()) {
-		  Serial.println(F("Watering access denied: Watering admin mode OFF."));
-		  return;
-		}
-
-
-	  case 8:
-
-		return;
-
-	  case 9: // TODO: FAN SPEED SET
-		Serial.println("This implementation is wrong because it doesn't take fan admin into account");
-		return;
-
-	  case 10:
-
-
-	  case 0:
-
-
-	  case 11: //TODO: FAN ADMIN
-		if (getFanAdmin()) {
-		  setFanAdmin(0);
-		  Serial.println(F("Fan admin mode OFF."));
-		  return;
-		}
-		setFanAdmin(1);
-		Serial.println(F("Fan admin mode ON."));
-		return;
-
-	  }
 	*/
 }
 
@@ -461,26 +393,26 @@ void Control::fanStateEvent(int value) {
 }
 
 void Control::measureEvent() {
-	logger->logData(now, measure);
+	logger->logData(*now, measure);
 }
 
 void Control::printTimeEvent() {
-	logger->printTime(now);
+	logger->printTime(*now);
 }
 void Control::setTimeEvent() {
 	Serial.println(F("unimplemented."));
 }
 
 DateTime Control::getTime() {
-	return now;
+	return *now;
 }
 void Control::updateTime() {
-	now = rtc->now();
+	*now = rtc->now();
 }
 
 void Control::tick() {
 
-	if (now.second() % 2 == 0 && (now.hour() % 1 == 0) && now.minute() % 1 == 0) {
+	if (now->second() % 2 == 0 && (now->hour() % 1 == 0) && now->minute() % 1 == 0) {
 		digitalWrite(LOGGING_LED, LOW); // ensure every 2 seconds is only mode colors.
 		if (getLock()) {
 			digitalWrite(RgbControlPin, HIGH);
@@ -504,7 +436,7 @@ void Control::tick() {
 void Control::autoLight() {
 	if (!getLightAdmin()) {
 		// if time is inside interval <8am,10pm> and light is not on (user has not turned it on) then:
-		if (getDecimalTime(now) >= 8.0 && getDecimalTime(now) < 22.0) { //TODO: not constantly turning on
+		if (getDecimalTime(*now) >= 8.0 && getDecimalTime(*now) < 22.0) { //TODO: not constantly turning on
 			digitalWrite(lightControlPin, LOW); // it's NC (normally closed), so LOW turns the light on.
 			if (!getLightingState()) setLightingState(1);
 		}
@@ -513,58 +445,21 @@ void Control::autoLight() {
 			if (getLightingState()) setLightingState(0);
 		}
 	}
-}
-
-void Control::autoLight(DateTime now) {
-	if (!getLightAdmin()) {
-		// if time is inside interval <8am,10pm> and light is not on (user has not turned it on) then:
-		if (getDecimalTime(now) >= 8.0 && getDecimalTime(now) < 22.0) { //TODO: not constantly turning on
-			digitalWrite(lightControlPin, LOW); // it's NC (normally closed), so LOW turns the light on.
-			if (!getLightingState()) setLightingState(1);
-		}
-		else {
-			digitalWrite(lightControlPin, HIGH); // turn the light off.
-			if (getLightingState()) setLightingState(0);
-		}
-	}
-}
-
-void Control::getRemoteInstructions() {
-	byte instr = remote->getInstruction();
-	if (instr == remote->getErrorCode()) return;
-	mainSwitch(remote->getInstruction());
 }
 
 void Control::update() {
 
 	updateTime();
-
 	remote->readRemote();
 	remote->onTick();
 	getRemoteInstructions();
-
+  
 	autoLight();
 	tick();
 	logControl();
+  
+}
 
-}
-void Control::tick(DateTime now) {
-	if (now.second() % 2 == 0 && (now.hour() % 1 == 0) && now.minute() % 1 == 0) {
-		if (getLock()) {
-			digitalWrite(RgbControlPin, HIGH);
-			digitalWrite(rGbControlPin, LOW);
-		}
-		else {
-			digitalWrite(rGbControlPin, HIGH);
-			if (getLightAdmin() || getHeatAdmin() || getWateringAdmin() || getFanAdmin()) digitalWrite(RgbControlPin, HIGH);
-			else digitalWrite(RgbControlPin, LOW);
-		}
-	}
-	else {
-		digitalWrite(RgbControlPin, LOW);
-		digitalWrite(rGbControlPin, LOW);
-	}
-}
 void Control::renewNetwork(bool rewriteDevice) {
 	byte response = Ethernet.maintain(); // renew DHCP lease
 	switch (response) {
@@ -589,43 +484,44 @@ void Control::renewNetwork(bool rewriteDevice) {
 	setNetReconf(0);
 }
 
-void Control::getRemoteInstructions(DateTime now) {
+void Control::getRemoteInstructions() {
 	byte instr = remote->getInstruction();
 	if (instr == remote->getErrorCode()) return;
+	Serial.println(instr);
 	mainSwitch(remote->getInstruction());
 }
 
 void Control::logControl() {
-	/*
-	if (now.second() == 0 && (now.hour() % 1 == 0) && ((now.minute() % 30 == 0) || now.minute() == 0)) {
+	
+	if (now->second() == 0 && (now->hour() % 1 == 0) && ((now->minute() % 30 == 0) || now->minute() == 0)) {
 	  setWritten(0);
 	}
-	if (now.second() == 30 && now.minute() % 1 == 0) {
+	if (now->second() == 30 && now->minute() % 1 == 0) {
 	  setCodeFetch(1);
 	}
-	if (now.second() == 0 && now.minute() == 0 && now.hour() == 1) {
+	if (now->second() == 0 && now->minute() == 0 && now->hour() == 1) {
 	  setNetReconf(1);
 	}
-	*/
+	
 
 	if (!getWritten()) {
 
-		if (getLogging()) logger->logData(now, measure);
+		if (getLogging()) logger->logData(*now, measure);
 		else Serial.println(F("Didn't write, that's what you wanted, right?"));
 
 		setWritten(1);
 	}
 
 	if (getCodeFetch()) {
-		int code = web->getCode();
-		mainSwitch(code);
-		if (code != 500) web->completeCode();
+		//int code = web->getCode();
+		//mainSwitch(code);
+		//if (code != 500) web->completeCode();
 		setCodeFetch(0);
-		web->updateState();
+		//web->updateState();
 	}
 
 	if (getNetReconf()) {
-		renewNetwork(false);
+		//renewNetwork(false);
 	}
 
 }
@@ -636,3 +532,8 @@ void Control::empty() {
 void Control::test() {
 	Serial.println("TESTING");
 }
+
+void Control::bindScreenToRemote(Screen *screen){
+  remote->bindScreen(screen);
+}
+

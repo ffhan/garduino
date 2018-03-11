@@ -2,9 +2,8 @@
 #define __ACTION_INCLUDED__
 
 #include "Arduino.h"
-#include "Control.h"
 
-using namespace std;
+#include "Control.h"
 
 typedef int (Control::*Promise)();
 
@@ -79,12 +78,15 @@ class Action {
   public :
 
     int code;
+	int remoteCode;
 
     Action(Control *control, int code, Event event);
 	Action(Control *control, int code, SetBit setBit, int *value);
 	Action(Control *control, int code, SetBit setBit);
 
 	void bindToValue(int *value);
+
+	void bindToRemoteCode(int remoteCode);
 
     void addPromises() {}
 

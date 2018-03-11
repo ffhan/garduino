@@ -9,8 +9,6 @@ Setting::Setting(char *title, Control *control, Action *event) : Item(title) {
 }
 
 Item *Setting::enter() {
-	Serial.println("entering");
 	event->execute();
-	Serial.println("exited.");
 	return Item::enter();
 }

@@ -7,14 +7,14 @@ ActionNode::ActionNode() {
 }
 
 ActionNode::ActionNode(Action *action) {
-  data = action;
+	data = action;
 }
 
 ActionBinaryTree::ActionBinaryTree()
 
 {
 
-  root = NULL;
+	root = NULL;
 
 }
 
@@ -26,7 +26,7 @@ bool ActionBinaryTree::isEmpty()
 
 {
 
-  return root == NULL;
+	return root == NULL;
 
 }
 
@@ -38,7 +38,7 @@ void ActionBinaryTree::makeEmpty()
 
 {
 
-  root = NULL;
+	root = NULL;
 
 }
 
@@ -51,7 +51,7 @@ void ActionBinaryTree::insert(Action *data)
 
 {
 
-  root = insert(data, root);
+	root = insert(data, root);
 
 }
 
@@ -63,7 +63,7 @@ int ActionBinaryTree::height(ActionNode *t)
 
 {
 
-  return t == NULL ? -1 : t->height;
+	return t == NULL ? -1 : t->height;
 
 }
 
@@ -75,7 +75,7 @@ int ActionBinaryTree::maks(int lhs, int rhs)
 
 {
 
-  return lhs > rhs ? lhs : rhs;
+	return lhs > rhs ? lhs : rhs;
 
 }
 
@@ -87,49 +87,49 @@ ActionNode *ActionBinaryTree::insert(Action *x, ActionNode *t)
 
 {
 
-  if (t == NULL)
+	if (t == NULL)
 
-    t = new ActionNode(x);
+		t = new ActionNode(x);
 
-  else if (x->code < t->data->code)
+	else if (x->code < t->data->code)
 
-  {
+	{
 
-    t->left = insert(x, t->left);
+		t->left = insert(x, t->left);
 
-    if (height(t->left) - height(t->right) == 2)
+		if (height(t->left) - height(t->right) == 2)
 
-      if (x < t->left->data)
+			if (x < t->left->data)
 
-        t = rotateWithLeftChild(t);
+				t = rotateWithLeftChild(t);
 
-      else
+			else
 
-        t = doubleWithLeftChild(t);
+				t = doubleWithLeftChild(t);
 
-  }
+	}
 
-  else if (x > t->data)
+	else if (x->code >= t->data->code) // >= MIGHT BE WRONG.
 
-  {
+	{
 
-    t->right = insert(x, t->right);
+		t->right = insert(x, t->right);
 
-    if (height(t->right) - height(t->left) == 2)
+		if (height(t->right) - height(t->left) == 2)
 
-      if (x->code > t->right->data->code)
+			if (x->code > t->right->data->code)
 
-        t = rotateWithRightChild(t);
+				t = rotateWithRightChild(t);
 
-      else
+			else
 
-        t = doubleWithRightChild(t);
+				t = doubleWithRightChild(t);
 
-  }
+	}
 
-  t->height = maks(height(t->left), height(t->right)) + 1;
+	t->height = maks(height(t->left), height(t->right)) + 1;
 
-  return t;
+	return t;
 
 }
 
@@ -141,17 +141,17 @@ ActionNode *ActionBinaryTree::rotateWithLeftChild(ActionNode* k2)
 
 {
 
-  ActionNode *k1 = k2->left;
+	ActionNode *k1 = k2->left;
 
-  k2->left = k1->right;
+	k2->left = k1->right;
 
-  k1->right = k2;
+	k1->right = k2;
 
-  k2->height = maks(height(k2->left), height(k2->right)) + 1;
+	k2->height = maks(height(k2->left), height(k2->right)) + 1;
 
-  k1->height = maks(height(k1->left), k2->height) + 1;
+	k1->height = maks(height(k1->left), k2->height) + 1;
 
-  return k1;
+	return k1;
 
 }
 
@@ -163,17 +163,17 @@ ActionNode *ActionBinaryTree::rotateWithRightChild(ActionNode *k1)
 
 {
 
-  ActionNode *k2 = k1->right;
+	ActionNode *k2 = k1->right;
 
-  k1->right = k2->left;
+	k1->right = k2->left;
 
-  k2->left = k1;
+	k2->left = k1;
 
-  k1->height = maks(height(k1->left), height(k1->right)) + 1;
+	k1->height = maks(height(k1->left), height(k1->right)) + 1;
 
-  k2->height = maks(height(k2->right), k1->height) + 1;
+	k2->height = maks(height(k2->right), k1->height) + 1;
 
-  return k2;
+	return k2;
 
 }
 
@@ -191,9 +191,9 @@ ActionNode *ActionBinaryTree::doubleWithLeftChild(ActionNode *k3)
 
 {
 
-  k3->left = rotateWithRightChild(k3->left);
+	k3->left = rotateWithRightChild(k3->left);
 
-  return rotateWithLeftChild(k3);
+	return rotateWithLeftChild(k3);
 
 }
 
@@ -211,9 +211,9 @@ ActionNode *ActionBinaryTree::doubleWithRightChild(ActionNode *k1)
 
 {
 
-  k1->right = rotateWithLeftChild(k1->right);
+	k1->right = rotateWithLeftChild(k1->right);
 
-  return rotateWithRightChild(k1);
+	return rotateWithRightChild(k1);
 
 }
 
@@ -225,7 +225,7 @@ int ActionBinaryTree::countNodes()
 
 {
 
-  return countNodes(root);
+	return countNodes(root);
 
 }
 
@@ -235,23 +235,23 @@ int ActionBinaryTree::countNodes(ActionNode *r)
 
 {
 
-  if (r == NULL)
+	if (r == NULL)
 
-    return 0;
+		return 0;
 
-  else
+	else
 
-  {
+	{
 
-    int l = 1;
+		int l = 1;
 
-    l += countNodes(r->left);
+		l += countNodes(r->left);
 
-    l += countNodes(r->right);
+		l += countNodes(r->right);
 
-    return l;
+		return l;
 
-  }
+	}
 
 }
 
@@ -263,7 +263,7 @@ bool ActionBinaryTree::search(int val)
 
 {
 
-  return search(root, val);
+	return search(root, val);
 
 }
 
@@ -271,7 +271,7 @@ Action *ActionBinaryTree::retrieve(int val)
 
 {
 
-  return retrieve(root, val);
+	return retrieve(root, val);
 
 }
 
@@ -279,37 +279,83 @@ Action *ActionBinaryTree::retrieve(ActionNode *r, int val)
 
 {
 
-  Action *found = NULL;
+	Action *found = NULL;
 
-  while ((r != NULL) && !found)
+	while ((r != NULL) && !found)
 
-  {
+	{
 
-    int rval = r->data->code;
+		int rval = r->data->code;
 
-    if (val < rval)
+		if (val < rval)
 
-      r = r->left;
+			r = r->left;
 
-    else if (val > rval)
+		else if (val > rval)
 
-      r = r->right;
+			r = r->right;
 
-    else
+		else
 
-    {
+		{
 
-      found = r->data;
+			found = r->data;
 
-      break;
+			break;
 
-    }
+		}
 
-    found = retrieve(r, val);
+		found = retrieve(r, val);
 
-  }
+	}
 
-  return found;
+	return found;
+
+}
+
+Action *ActionBinaryTree::retrieveRemote(int val)
+
+{
+
+	return retrieveRemote(root, val);
+
+}
+
+Action *ActionBinaryTree::retrieveRemote(ActionNode *r, int val)
+
+{
+
+	Action *found = NULL;
+
+	while ((r != NULL) && !found)
+
+	{
+
+		int rval = r->data->remoteCode;
+
+		if (val < rval)
+
+			r = r->left;
+
+		else if (val > rval)
+
+			r = r->right;
+
+		else
+
+		{
+
+			found = r->data;
+
+			break;
+
+		}
+
+		found = retrieve(r, val);
+
+	}
+
+	return found;
 
 }
 
@@ -317,37 +363,37 @@ bool ActionBinaryTree::search(ActionNode *r, int val)
 
 {
 
-  bool found = false;
+	bool found = false;
 
-  while ((r != NULL) && !found)
+	while ((r != NULL) && !found)
 
-  {
+	{
 
-    int rval = r->data->code;
+		int rval = r->data->code;
 
-    if (val < rval)
+		if (val < rval)
 
-      r = r->left;
+			r = r->left;
 
-    else if (val > rval)
+		else if (val > rval)
 
-      r = r->right;
+			r = r->right;
 
-    else
+		else
 
-    {
+		{
 
-      found = true;
+			found = true;
 
-      break;
+			break;
 
-    }
+		}
 
-    found = search(r, val);
+		found = search(r, val);
 
-  }
+	}
 
-  return found;
+	return found;
 
 }
 
@@ -359,7 +405,7 @@ void ActionBinaryTree::inorder()
 
 {
 
-  inorder(root);
+	inorder(root);
 
 }
 
@@ -369,15 +415,15 @@ void ActionBinaryTree::inorder(ActionNode *r)
 
 {
 
-  if (r != NULL)
+	if (r != NULL)
 
-  {
+	{
+		
+		inorder(r->left);
+		Serial.print(r->height); Serial.print(" "); Serial.println(r->data->code);
+		inorder(r->right);
 
-    inorder(r->left);
-
-    inorder(r->right);
-
-  }
+	}
 
 }
 
@@ -389,7 +435,7 @@ void ActionBinaryTree::preorder()
 
 {
 
-  preorder(root);
+	preorder(root);
 
 }
 
@@ -397,15 +443,15 @@ void ActionBinaryTree::preorder(ActionNode *r)
 
 {
 
-  if (r != NULL)
+	if (r != NULL)
 
-  {
+	{
 
-    preorder(r->left);
+		preorder(r->left);
 
-    preorder(r->right);
+		preorder(r->right);
 
-  }
+	}
 
 }
 
@@ -417,7 +463,7 @@ void ActionBinaryTree::postorder()
 
 {
 
-  postorder(root);
+	postorder(root);
 
 }
 
@@ -425,15 +471,15 @@ void ActionBinaryTree::postorder(ActionNode *r)
 
 {
 
-  if (r != NULL)
+	if (r != NULL)
 
-  {
+	{
 
-    postorder(r->left);
+		postorder(r->left);
 
-    postorder(r->right);
+		postorder(r->right);
 
-  }
+	}
 
 }
 
