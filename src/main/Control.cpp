@@ -5,6 +5,7 @@
 #include "Logging.h"
 #include "ActionBinaryTree.h"
 #include "Action.h"
+#include "Screen.h"
 #include "pins.h"
 
 extern double getDecimalTime(DateTime now);
@@ -16,10 +17,14 @@ Control::Control() {
 		while (1);
 	}
 
+  //rtc->adjust(DateTime(F(__DATE__), F(__TIME__)));
+
+  updateTime();
+
 	Serial.println(F("done."));
 
 	measure = new Measuring();
-	remote = new Remote();
+	remote = new Remote(this);
 	logger = new Logging(this);
 	actions = new ActionBinaryTree();
 
@@ -461,26 +466,26 @@ void Control::fanStateEvent(int value) {
 }
 
 void Control::measureEvent() {
-	logger->logData(now, measure);
+	logger->logData(*now, measure);
 }
 
 void Control::printTimeEvent() {
-	logger->printTime(now);
+	logger->printTime(*now);
 }
 void Control::setTimeEvent() {
 	Serial.println(F("unimplemented."));
 }
 
 DateTime Control::getTime() {
-	return now;
+	return *now;
 }
 void Control::updateTime() {
-	now = rtc->now();
+	*now = rtc->now();
 }
 
 void Control::tick() {
 
-	if (now.second() % 2 == 0 && (now.hour() % 1 == 0) && now.minute() % 1 == 0) {
+	if (now->second() % 2 == 0 && (now->hour() % 1 == 0) && now->minute() % 1 == 0) {
 		digitalWrite(LOGGING_LED, LOW); // ensure every 2 seconds is only mode colors.
 		if (getLock()) {
 			digitalWrite(RgbControlPin, HIGH);
@@ -504,7 +509,7 @@ void Control::tick() {
 void Control::autoLight() {
 	if (!getLightAdmin()) {
 		// if time is inside interval <8am,10pm> and light is not on (user has not turned it on) then:
-		if (getDecimalTime(now) >= 8.0 && getDecimalTime(now) < 22.0) { //TODO: not constantly turning on
+		if (getDecimalTime(*now) >= 8.0 && getDecimalTime(*now) < 22.0) { //TODO: not constantly turning on
 			digitalWrite(lightControlPin, LOW); // it's NC (normally closed), so LOW turns the light on.
 			if (!getLightingState()) setLightingState(1);
 		}
@@ -513,58 +518,21 @@ void Control::autoLight() {
 			if (getLightingState()) setLightingState(0);
 		}
 	}
-}
-
-void Control::autoLight(DateTime now) {
-	if (!getLightAdmin()) {
-		// if time is inside interval <8am,10pm> and light is not on (user has not turned it on) then:
-		if (getDecimalTime(now) >= 8.0 && getDecimalTime(now) < 22.0) { //TODO: not constantly turning on
-			digitalWrite(lightControlPin, LOW); // it's NC (normally closed), so LOW turns the light on.
-			if (!getLightingState()) setLightingState(1);
-		}
-		else {
-			digitalWrite(lightControlPin, HIGH); // turn the light off.
-			if (getLightingState()) setLightingState(0);
-		}
-	}
-}
-
-void Control::getRemoteInstructions() {
-	byte instr = remote->getInstruction();
-	if (instr == remote->getErrorCode()) return;
-	mainSwitch(remote->getInstruction());
 }
 
 void Control::update() {
 
 	updateTime();
-
 	remote->readRemote();
 	remote->onTick();
 	getRemoteInstructions();
-
+  
 	autoLight();
 	tick();
 	logControl();
+  
+}
 
-}
-void Control::tick(DateTime now) {
-	if (now.second() % 2 == 0 && (now.hour() % 1 == 0) && now.minute() % 1 == 0) {
-		if (getLock()) {
-			digitalWrite(RgbControlPin, HIGH);
-			digitalWrite(rGbControlPin, LOW);
-		}
-		else {
-			digitalWrite(rGbControlPin, HIGH);
-			if (getLightAdmin() || getHeatAdmin() || getWateringAdmin() || getFanAdmin()) digitalWrite(RgbControlPin, HIGH);
-			else digitalWrite(RgbControlPin, LOW);
-		}
-	}
-	else {
-		digitalWrite(RgbControlPin, LOW);
-		digitalWrite(rGbControlPin, LOW);
-	}
-}
 void Control::renewNetwork(bool rewriteDevice) {
 	byte response = Ethernet.maintain(); // renew DHCP lease
 	switch (response) {
@@ -589,43 +557,43 @@ void Control::renewNetwork(bool rewriteDevice) {
 	setNetReconf(0);
 }
 
-void Control::getRemoteInstructions(DateTime now) {
+void Control::getRemoteInstructions() {
 	byte instr = remote->getInstruction();
 	if (instr == remote->getErrorCode()) return;
 	mainSwitch(remote->getInstruction());
 }
 
 void Control::logControl() {
-	/*
-	if (now.second() == 0 && (now.hour() % 1 == 0) && ((now.minute() % 30 == 0) || now.minute() == 0)) {
+	
+	if (now->second() == 0 && (now->hour() % 1 == 0) && ((now->minute() % 30 == 0) || now->minute() == 0)) {
 	  setWritten(0);
 	}
-	if (now.second() == 30 && now.minute() % 1 == 0) {
+	if (now->second() == 30 && now->minute() % 1 == 0) {
 	  setCodeFetch(1);
 	}
-	if (now.second() == 0 && now.minute() == 0 && now.hour() == 1) {
+	if (now->second() == 0 && now->minute() == 0 && now->hour() == 1) {
 	  setNetReconf(1);
 	}
-	*/
+	
 
 	if (!getWritten()) {
 
-		if (getLogging()) logger->logData(now, measure);
+		if (getLogging()) logger->logData(*now, measure);
 		else Serial.println(F("Didn't write, that's what you wanted, right?"));
 
 		setWritten(1);
 	}
 
 	if (getCodeFetch()) {
-		int code = web->getCode();
-		mainSwitch(code);
-		if (code != 500) web->completeCode();
+		//int code = web->getCode();
+		//mainSwitch(code);
+		//if (code != 500) web->completeCode();
 		setCodeFetch(0);
-		web->updateState();
+		//web->updateState();
 	}
 
 	if (getNetReconf()) {
-		renewNetwork(false);
+		//renewNetwork(false);
 	}
 
 }
@@ -636,3 +604,8 @@ void Control::empty() {
 void Control::test() {
 	Serial.println("TESTING");
 }
+
+void Control::bindScreenToRemote(Screen *screen){
+  remote->bindScreen(screen);
+}
+

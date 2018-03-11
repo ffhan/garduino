@@ -2,6 +2,7 @@
 #define __ACTION_INCLUDED__
 
 #include "Arduino.h"
+
 #include "Control.h"
 
 typedef int (Control::*Promise)();

@@ -65,7 +65,7 @@ int getFreeRam()
   return v;
 }
 
-Control *sys;
+Control *sys = (Control *) malloc(sizeof(Control));
 Screen *screen = (Screen*) malloc(sizeof(Screen));
 
 double getDecimalTime(DateTime now) {
@@ -136,8 +136,7 @@ void setup() {
   fanSettings->addItems(fanAdminSetting, fanSpeedSetting);
 
   screen = new Screen(16, 2, mainMenu);
-
-  screen->show();
+  sys->bindScreenToRemote(screen);
 
   pinMode(lightControlPin, OUTPUT); // Control light control pin as output
   pinMode(SensorPowerPin, OUTPUT); // Control humidity sensor power as output
@@ -158,7 +157,7 @@ void setup() {
 void loop() {
 
   bool typed = false;
-  while (Serial.available() > 0) {
+  while (Serial.available()) {
     int choice = Serial.parseInt();
     if (!typed) {
       Serial.println(choice);
@@ -183,7 +182,8 @@ void loop() {
           break;
       }
       //screen->flash(&printItem);
-      screen->show();
+
+      //screen->show();
       typed = true;
     }
   }

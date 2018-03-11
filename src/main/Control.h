@@ -10,6 +10,7 @@ class Logging;
 class ActionBinaryTree;
 class PromisePack;
 class Action;
+class Screen;
 
 class Control {
     /*
@@ -40,7 +41,7 @@ class Control {
     int fanSpeed_bitsize = 3;
 
     //printTime probably won't work if this is not set.
-    DateTime now;
+    DateTime *now = (DateTime *) malloc(sizeof(DateTime));
 
     typedef enum {LOCK = 0, LOGGING = 1, WRITTEN = 2, IS_INITIALISED = 3,
                   LIGHTING_STATE = 4, LIGHT_ADMIN = 5,
@@ -175,20 +176,18 @@ class Control {
 
     void autoLight();
 
-    void autoLight(DateTime now);
-
     void getRemoteInstructions();
 
     void update();
-    void tick(DateTime now);
-    void renewNetwork(bool rewriteDevice);
 
-    void getRemoteInstructions(DateTime now);
+    void renewNetwork(bool rewriteDevice);
 
     void logControl();
 
     void empty();
     void test();
+
+    void bindScreenToRemote(Screen *screen);
 
 };
 

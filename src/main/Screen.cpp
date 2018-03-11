@@ -23,6 +23,7 @@ void Screen::up() {
   index--;
   if (*cursorPosition - 1 >= 0) (*cursorPosition)--;
   currentItem = currentItem->up();
+  show();
 }
 void Screen::down() {
   if (!currentItem->down()) {
@@ -31,6 +32,7 @@ void Screen::down() {
   index++;
   if (*cursorPosition + 1 < rows) (*cursorPosition)++;
   currentItem = currentItem->down();
+  show();
 }
 void Screen::back() {
   if (!currentItem->back()) return;
@@ -42,12 +44,13 @@ void Screen::back() {
     currentItem = currentItem->back();
     index = currentItem->getIndex();
   }
-
+  show();
   //Serial.println(mainMenu->getTitle());
 }
 void Screen::enter() {
   if (currentItem->isSetting()) {
     currentItem->enter();
+    show();
   }
   if (currentItem->getType() != MENU) return;
   if (!currentItem->enter()) return;
@@ -57,13 +60,16 @@ void Screen::enter() {
   *cursorPosition = 0; // reset the cursor position, because we do the same for the index.
   currentItem = mainMenu->enter();
   index = currentItem->getIndex();
+  show();
 }
 
 void Screen::left() {
   currentItem->left();
+  show();
 }
 void Screen::right() {
   currentItem->right();
+  show();
 }
 void Screen::flash(Printer func) {
   Serial.print(*cursorPosition); Serial.print(space); Serial.println(index);

@@ -20,8 +20,8 @@ class Screen{
   static const char unsaved = '_';
   
   byte rows, cols;
-  Menu *mainMenu;
-  Item *currentItem;
+  Menu *mainMenu = NULL;
+  Item *currentItem = NULL;
 
   /*
    * cursorPosition is the position on the screen. It's dictated by the screen size.
