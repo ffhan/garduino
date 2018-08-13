@@ -1,7 +1,7 @@
 #include "IntBitSetting.h"
 
-#include "Action.h"
-#include "Control.h"
+#include "../Action.h"
+#include "../../garduino/Control.h"
 
 IntBitSetting::IntBitSetting(char *title, Control *control, Action *event, GetBit getBit, int range) : BitSetting<int>(title, control, event, getBit) {
 	this->range = range;

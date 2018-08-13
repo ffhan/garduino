@@ -1,6 +1,6 @@
 #include "ActionBinaryTree.h"
 
-#include "Action.h"
+#include "../Action.h"
 
 ActionNode::ActionNode() {
 

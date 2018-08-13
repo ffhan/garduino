@@ -1,7 +1,7 @@
 #ifndef __ITEMLIST_INCLUDED__
 #define __ITEMLIST_INCLUDED__
 
-#include "ItemNode.h"
+#include "support/ItemNode.h"
 
 class Item;
 

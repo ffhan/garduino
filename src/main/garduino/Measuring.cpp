@@ -1,5 +1,5 @@
 #include "Measuring.h"
-#include "pins.h"
+#include "../../support/pins.h"
 
 Measuring::Measuring() {
   soilMoisture = 0;

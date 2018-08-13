@@ -1,6 +1,6 @@
 #include "Remote.h"
-#include "Screen.h"
-#include "pins.h"
+#include "../menu/Screen.h"
+#include "../../support/pins.h"
 
 Remote::Remote(Control *sys) {
   this->sys = sys;

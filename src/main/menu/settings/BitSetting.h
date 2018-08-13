@@ -2,7 +2,7 @@
 #define __BITSETTING_INCLUDED__
 
 #include "Setting.h"
-#include "Control.h"
+#include "../../garduino/Control.h"
 
 template <class T>
 class BitSetting : public Setting{

@@ -1,8 +1,8 @@
 #ifndef __SETTING_INCLUDED__
 #define __SETTING_INCLUDED__
 
-#include "Item.h"
-#include "Control.h"
+#include "../Item.h"
+#include "../../garduino/Control.h"
 
 class Action;
 
