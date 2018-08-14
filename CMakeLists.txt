@@ -1,0 +1,62 @@
+cmake_minimum_required(VERSION 3.12)
+project(garduino)
+
+set(CMAKE_CXX_STANDARD 14)
+
+include_directories(src/main/garduino)
+include_directories(src/main/logging)
+include_directories(src/main/menu)
+include_directories(src/main/menu/settings)
+include_directories(src/main/menu/support)
+include_directories(src/main/remote)
+include_directories(src/main/web)
+include_directories(src/support)
+
+add_executable(garduino
+        cmake/Platform/Arduino.cmake
+        cmake/ArduinoToolchain.cmake
+        src/main/garduino/Control.cpp
+        src/main/garduino/Control.h
+        src/main/garduino/Measuring.cpp
+        src/main/garduino/Measuring.h
+        src/main/logging/Logging.cpp
+        src/main/logging/Logging.h
+        src/main/menu/settings/BitSetting.cpp
+        src/main/menu/settings/BitSetting.h
+        src/main/menu/settings/BoolBitSetting.cpp
+        src/main/menu/settings/BoolBitSetting.h
+        src/main/menu/settings/BoolSetting.cpp
+        src/main/menu/settings/BoolSetting.h
+        src/main/menu/settings/IntBitSetting.cpp
+        src/main/menu/settings/IntBitSetting.h
+        src/main/menu/settings/IntSetting.cpp
+        src/main/menu/settings/IntSetting.h
+        src/main/menu/settings/Setting.cpp
+        src/main/menu/settings/Setting.h
+        src/main/menu/settings/ValueSetting.cpp
+        src/main/menu/settings/ValueSetting.h
+        src/main/menu/support/ActionBinaryTree.cpp
+        src/main/menu/support/ActionBinaryTree.h
+        src/main/menu/support/ItemNode.h
+        src/main/menu/support/menuFuncs.cpp
+        src/main/menu/support/menuFuncs.h
+        src/main/menu/Action.cpp
+        src/main/menu/Action.h
+        src/main/menu/Item.cpp
+        src/main/menu/Item.h
+        src/main/menu/ItemList.cpp
+        src/main/menu/ItemList.h
+        src/main/menu/Menu.cpp
+        src/main/menu/Menu.h
+        src/main/menu/Screen.cpp
+        src/main/menu/Screen.h
+        src/main/remote/Remote.cpp
+        src/main/remote/Remote.h
+        src/main/web/WebController.cpp
+        src/main/web/WebController.h
+        src/main/main.ino
+        src/support/pins.h
+        .gitignore
+        CMakeLists.txt
+        LICENSE
+        README.md)
