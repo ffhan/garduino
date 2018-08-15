@@ -1,5 +1,5 @@
 #include "BoolBitSetting.h"
-#include "../../garduino/Control.h"
+#include "Control.h"
 
 BoolBitSetting::BoolBitSetting(char *title, Control *control, Action *event, GetBit getBit) : BitSetting<bool>(title, control, event, getBit) {
   type = BOOLBITSETTING;

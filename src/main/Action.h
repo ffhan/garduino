@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 
-#include "../garduino/Control.h"
+#include "Control.h"
 
 typedef int (Control::*Promise)();
 

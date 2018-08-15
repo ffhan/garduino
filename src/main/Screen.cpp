@@ -1,9 +1,9 @@
 #include "Screen.h"
 
-#include "settings/IntSetting.h"
-#include "settings/BoolSetting.h"
-#include "settings/IntBitSetting.h"
-#include "settings/BoolBitSetting.h"
+#include "IntSetting.h"
+#include "BoolSetting.h"
+#include "IntBitSetting.h"
+#include "BoolBitSetting.h"
 
 Screen::Screen(byte cols, byte rows, Menu *mainMenu) {
   this->rows = rows;

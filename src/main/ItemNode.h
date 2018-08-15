@@ -2,7 +2,7 @@
 #define __ITEMNODE__INCLUDED__
 
 #include "Arduino.h"
-#include "../Item.h"
+#include "Item.h"
 
 class ItemNode{
   public : 

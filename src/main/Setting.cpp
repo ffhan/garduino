@@ -1,6 +1,6 @@
 #include "Setting.h"
 
-#include "../Action.h"
+#include "Action.h"
 
 Setting::Setting(char *title, Control *control, Action *event) : Item(title) {
 	controller = control;

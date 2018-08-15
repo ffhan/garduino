@@ -9,20 +9,20 @@
 //#include <Ethernet.h>
 //#include <EEPROM.h>
 //#include <avr/pgmspace.h>
-#include "garduino/Control.h"
-#include "web/WebController.h"
-#include "../support/pins.h"
-#include "logging/Logging.h"
-#include "menu/Item.h"
-#include "menu/support/ItemNode.h"
-#include "menu/Menu.h"
-#include "menu/settings/Setting.h"
-#include "menu/settings/BoolSetting.h"
-#include "menu/settings/IntSetting.h"
-#include "menu/settings/IntBitSetting.h"
-#include "menu/settings/BoolBitSetting.h"
-#include "menu/Screen.h"
-#include "menu/Action.h"
+#include "Control.h"
+#include "WebController.h"
+#include "pins.h"
+#include "Logging.h"
+#include "Item.h"
+#include "ItemNode.h"
+#include "Menu.h"
+#include "Setting.h"
+#include "BoolSetting.h"
+#include "IntSetting.h"
+#include "IntBitSetting.h"
+#include "BoolBitSetting.h"
+#include "Screen.h"
+#include "Action.h"
 
 /*
   const int lightControlPin = 6;

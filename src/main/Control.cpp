@@ -1,12 +1,12 @@
 #include "Control.h"
-#include "../web/WebController.h"
+#include "WebController.h"
 #include "Measuring.h"
-#include "../remote/Remote.h"
-#include "../logging/Logging.h"
-#include "../menu/support/ActionBinaryTree.h"
-#include "../menu/Action.h"
-#include "../menu/Screen.h"
-#include "../../support/pins.h"
+#include "remote.h"
+#include "Logging.h"
+#include "ActionBinaryTree.h"
+#include "Action.h"
+#include "Screen.h"
+#include "pins.h"
 
 extern double getDecimalTime(DateTime now);
 

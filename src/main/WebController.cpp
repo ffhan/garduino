@@ -1,7 +1,7 @@
 #include "WebController.h"
-#include "../garduino/Control.h"
-#include "../garduino/Measuring.h"
-#include "../logging/Logging.h"
+#include "Control.h"
+#include "Measuring.h"
+#include "Logging.h"
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 IPAddress ip(192,168,0,1);

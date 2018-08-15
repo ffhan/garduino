@@ -1,8 +1,8 @@
 #include "Logging.h"
 #include "RTClib.h"
-#include "../garduino/Measuring.h"
-#include "../garduino/Control.h"
-#include "../web/WebController.h"
+#include "Measuring.h"
+#include "Control.h"
+#include "WebController.h"
 
 Logging::Logging(Control *sys) {
 	this->sys = sys;
